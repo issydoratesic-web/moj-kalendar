@@ -93,13 +93,16 @@ if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
         st.warning("Molimo unesite PUNO ime i prezime.")
     elif not kontakt:
         st.warning("Molimo unesite kontakt.")
-    else:
-        kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-        spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-        posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod, tip="rezervacija")
-        st.success("✅ Uspješno rezervirano!")
-        time_module.sleep(1)
-        st.rerun()
+   # ... unutar tvog if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"): bloka:
+        else:
+            kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+            spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
+            posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod, tip="rezervacija")
+            
+            # Ovdje mijenjamo tekst i vrijeme čekanja:
+            st.success("Vaš termin je uspješno rezerviran!")
+            time_module.sleep(5)  # Program pauzira 5 sekundi
+            st.rerun()
 
 # --- PROVJERA I OTKAZIVANJE ---
 st.markdown("---")
