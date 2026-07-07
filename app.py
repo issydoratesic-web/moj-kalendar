@@ -12,7 +12,6 @@ st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="center
 def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, tip="rezervacija"):
     try:
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
-        # Boja: Zelena za rezervaciju (3066993), Crvena za otkazivanje (15158332)
         color = 3066993 if tip == "rezervacija" else 15158332
         naslov = "🔔 Nova rezervacija!" if tip == "rezervacija" else "❌ Otkazan termin!"
         
@@ -77,7 +76,8 @@ if stranica == "📅 Rezervacija":
         datum_str = d_input.strftime("%d/%m/%Y")
         df = ucitaj_termine()
         zauzeti = df[df['Datum'] == datum_str]['Vrijeme'].tolist()
-        dostupna = [v for v in ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"] if v not in zauzeti]
+        sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+        dostupna = [v for v in sva_vremena if v not in zauzeti]
         
         if dostupna:
             vrijeme = st.selectbox("Slobodno vrijeme:", dostupna)
@@ -88,8 +88,9 @@ if stranica == "📅 Rezervacija":
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga, tip="rezervacija")
                     st.session_state['zadnji_klik'] = time.time()
-                    st.success("Termin uspješno rezerviran!")
-                    time.sleep(2); st.rerun()
+                    st.write("✅ Termin uspješno rezerviran!")
+                    time.sleep(2)
+                    st.rerun()
 
 elif stranica == "❌ Otkazivanje":
     st.subheader("Otkazivanje termina")
@@ -105,8 +106,20 @@ elif stranica == "❌ Otkazivanje":
                 if d_termin - datetime.now() < timedelta(days=2):
                     st.error("Ne možete otkazati unutar 48 sati!")
                 else:
+                    # Tražimo redak i šaljemo obavijest
                     red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
                     posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
-                    df = df.drop(red.name)
+                    # Brišemo
+                    df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].index)
                     df.to_csv(DB_FILE, index=False)
-                    st.success("
+                    st.write("❌ Termin otkazan, obavijest poslana.")
+                    time.sleep(2)
+                    st.rerun()
+
+elif stranica == "🔐 Admin Panel":
+    lozinka = st.text_input("Lozinka:", type="password")
+    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
+        st.dataframe(ucitaj_termine(), use_container_width=True)
+        if st.button("Obriši sve"):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.rerun()
