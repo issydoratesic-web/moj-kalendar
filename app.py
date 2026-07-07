@@ -76,16 +76,25 @@ if stranica == "Rezerviraj Termin":
     
     if puna_usluga:
         datum = st.date_input("Datum:", min_value=datetime.today().date(), format="DD/MM/YYYY")
-        vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        vrijeme = st.selectbox("Vrijeme:", vremena)
         
-        if st.button("Rezerviraj"):
-            if ime and kontakt:
-                spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
-                posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
-                st.success("Termin uspješno rezerviran!")
-                st.rerun()
-            else: st.error("Molimo ispunite ime i kontakt.")
+        # LOGIKA ZA ZAUZETOST
+        df_termini = ucitaj_termine()
+        zauzeti_termini = df_termini[df_termini['Datum'] == str(datum)]['Vrijeme'].tolist()
+        
+        sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+        dostupna_vremena = [v for v in sva_vremena if v not in zauzeti_termini]
+        
+        if dostupna_vremena:
+            vrijeme = st.selectbox("Vrijeme:", dostupna_vremena)
+            if st.button("Rezerviraj"):
+                if ime and kontakt:
+                    spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
+                    posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
+                    st.success("Termin uspješno rezerviran!")
+                    st.rerun()
+                else: st.error("Molimo ispunite ime i kontakt.")
+        else:
+            st.warning("Nažalost, za ovaj datum nema više slobodnih termina.")
 
 elif stranica == "Admin Panel":
     st.title("🔐 Admin Pristup")
