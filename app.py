@@ -7,7 +7,7 @@ import requests
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
 
-# CSS za uljepšavanje
+# CSS za uljepšavanje gumba i izgleda
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 5px; background-color: #ff4b4b; color: white; font-weight: bold; }
@@ -30,6 +30,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
     except: pass
 
 DB_FILE = "termini.csv"
+
 def ucitaj_termine():
     if os.path.exists(DB_FILE): return pd.read_csv(DB_FILE)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Status"])
@@ -82,8 +83,10 @@ if stranica == "📅 Rezervacija":
         d_input = st.date_input("Datum:", min_value=datetime.today(), format="DD/MM/YYYY")
         datum_str = d_input.strftime("%d/%m/%Y")
         
+        # LOGIKA PROVJERE ZAUZETOSTI
         df_termini = ucitaj_termine()
         zauzeti = df_termini[df_termini['Datum'] == datum_str]['Vrijeme'].tolist()
+        
         sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
         dostupna = [v for v in sva_vremena if v not in zauzeti]
         
@@ -95,7 +98,8 @@ if stranica == "📅 Rezervacija":
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.balloons()
                     st.success("Termin uspješno rezerviran!")
-                else: st.error("Ispunite ime i kontakt.")
+                    st.rerun() # Osvježi stranicu nakon rezervacije
+                else: st.error("Molimo ispunite ime i kontakt.")
         else: st.warning("Nažalost, nema slobodnih termina za odabrani datum.")
 
 elif stranica == "🔐 Admin Panel":
