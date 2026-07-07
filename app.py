@@ -33,8 +33,7 @@ def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
     msg.attach(MIMEText(tijelo_maila, 'plain', 'utf-8'))
     
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(GMAIL_USER, GMAIL_PASSWORD)
         text = msg.as_string()
         server.sendmail(GMAIL_USER, GMAIL_USER, text)
