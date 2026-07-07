@@ -7,7 +7,7 @@ import requests
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
 
-# CSS za uljepšavanje
+# CSS za uljepšavanje gumba
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 5px; background-color: #ff4b4b; color: white; font-weight: bold; }
@@ -83,12 +83,10 @@ if stranica == "📅 Rezervacija":
         d_input = st.date_input("Datum:", min_value=datetime.today(), format="DD/MM/YYYY")
         datum_str = d_input.strftime("%d/%m/%Y")
         
-        # LOGIKA PROVJERE ZAUZETOSTI
         df_termini = ucitaj_termine()
         zauzeti = df_termini[df_termini['Datum'] == datum_str]['Vrijeme'].tolist()
-        
-        sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        dostupna = [v for v in sva_vremena if v not in zauzeti]
+        vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+        dostupna = [v for v in vremena if v not in zauzeti]
         
         if dostupna:
             vrijeme = st.selectbox("Odaberite slobodno vrijeme:", dostupna)
@@ -112,15 +110,19 @@ elif stranica == "🔐 Admin Panel":
         st.markdown("---")
         st.subheader("🗑️ Brisanje termina")
         if not df.empty:
-            index_za_brisanje = st.selectbox("Odaberite termin za brisanje (prema indeksu):", df.index.tolist())
+            # Selekt koji jasno prikazuje koji termin brišeš
+            index_za_brisanje = st.selectbox(
+                "Odaberite termin za brisanje:", 
+                options=df.index.tolist(),
+                format_func=lambda i: f"{df.loc[i, 'Datum']} u {df.loc[i, 'Vrijeme']} - {df.loc[i, 'Ime']}"
+            )
             if st.button("Obriši odabrani termin"):
                 df = df.drop(index_za_brisanje)
                 df.to_csv(DB_FILE, index=False)
-                st.success(f"Termin pod brojem {index_za_brisanje} je obrisan.")
+                st.success("Termin je obrisan.")
                 st.rerun()
         
         if st.button("⚠️ Obriši SVE termine"):
-            if os.path.exists(DB_FILE): 
-                os.remove(DB_FILE)
-                st.rerun()
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.rerun()
     elif lozinka: st.error("Pogrešna lozinka!")
