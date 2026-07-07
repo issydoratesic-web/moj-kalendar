@@ -49,7 +49,7 @@ def obrisi_termin(kod):
 st.title("✨ Adora Beauty Concept")
 
 st.info("""⚠️ **Napomena:**
-- Otkazivanje termina moguće je isključivo uz **Kod za otkazivanje** koji dobijete prilikom rezervacije.
+- **VAŽNO:** Prilikom rezervacije dobit ćete **Kod za otkazivanje**. Molimo da ga zapišete ili spremite jer vam je potreban za kasnije otkazivanje termina.
 - Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.""")
 
 st.subheader("Nova rezervacija")
@@ -92,7 +92,7 @@ if kat:
                 kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
                 spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
                 posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-                st.success(f"✅ Uspješno! Vaš kod za otkazivanje je: **{kod}**. Spremite ga!")
+                st.success(f"✅ Uspješno! Vaš kod za otkazivanje je: **{kod}**. MOLIMO ZAPIŠITE OVAJ KOD!")
                 time_module.sleep(5)
                 st.rerun()
 
@@ -108,7 +108,7 @@ with st.expander("❌ Želim otkazati termin (potreban kod)"):
             time_module.sleep(1)
             st.rerun()
         else:
-            st.error("Kod nije pronađen.")
+            st.error("Kod nije pronađen. Provjerite jeste li ga točno unijeli.")
 
 # --- ADMIN SIDEBAR ---
 with st.sidebar:
