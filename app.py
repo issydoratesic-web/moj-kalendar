@@ -4,31 +4,27 @@ from datetime import datetime
 import os
 import requests
 
-def posalji_discord_obavijest(ime, kontakt, datum, vrijeme):
+# --- DISCORD FUNKCIJA ---
+def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
     try:
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
-    except Exception as e:
-        st.error("Nedostaje DISCORD_WEBHOOK u Streamlit Secrets!")
+    except:
         return
 
     data = {
-        "content": "🔔 **Stigla je nova rezervacija termina!**",
+        "content": "🔔 **Nova rezervacija!**",
         "embeds": [{
             "title": f"👤 Klijent: {ime}",
             "color": 15418782,
             "fields": [
-                {"name": "📱 Kontakt (Instagram/Mobitel)", "value": kontakt, "inline": False},
+                {"name": "✂️ Usluga", "value": usluga, "inline": False},
+                {"name": "📱 Kontakt", "value": kontakt, "inline": False},
                 {"name": "📅 Datum", "value": str(datum), "inline": True},
                 {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}
-            ],
-            "footer": {"text": "Adora Beauty Concept - Sustav obavijesti"}
+            ]
         }]
     }
-    
-    try:
-        requests.post(DISCORD_WEBHOOK, json=data)
-    except Exception as e:
-        st.error(f"Greška kod slanja na Discord: {e}")
+    requests.post(DISCORD_WEBHOOK, json=data)
 
 # --- BAZA PODATAKA ---
 DB_FILE = "termini.csv"
@@ -36,57 +32,60 @@ DB_FILE = "termini.csv"
 def ucitaj_termine():
     if os.path.exists(DB_FILE):
         return pd.read_csv(DB_FILE)
-    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Status"])
+    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Status"])
 
-def spremi_termin(ime, kontakt, datum, vrijeme):
+def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
     df = ucitaj_termine()
-    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": str(datum), "Vrijeme": vrijeme, "Status": "Na cekanju"}])
+    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": str(datum), "Vrijeme": vrijeme, "Usluga": usluga, "Status": "Na cekanju"}])
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
 # --- GLAVNI PROGRAM ---
-st.set_page_config(page_title="Rezervacija Termina", layout="centered")
+st.set_page_config(page_title="Rezervacija", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
 if stranica == "Rezerviraj Termin":
-    st.title("📅 Rezervirajte svoj termin")
-    st.write("Odaberite datum i vrijeme koji vam odgovaraju.")
-    df_termini = ucitaj_termine()
+    st.title("📅 Rezervirajte termin")
     
     with st.form("rezervacija_forma", clear_on_submit=True):
-        ime = st.text_input("Vase Ime i Prezime:")
-        kontakt = st.text_input("Vas Instagram username ili broj mobitela:")
-        datum = st.date_input("Odaberite datum:", min_value=datetime.today().date())
+        ime = st.text_input("Ime i Prezime:")
+        kontakt = st.text_input("Kontakt (Instagram/Broj):")
         
+        # Ovdje su tvoje nove kategorije:
+        kategorije = [
+            "Šminkanje", "Terensko šminkanje", "Oblikovanje obrva pincetom", 
+            "Oblikovanje i bojanje obrva", "Brow lift", "Brow lift i bojanje", 
+            "Enzimski piling", "Blagi mehanički piling", 
+            "Parenje toplim ručnikom i masaža uz piling", "Ravnanje kose", 
+            "Uvijanje kose", "Hollywood valovi", "Elegantni repovi", 
+            "Punđa", "Relax zona", "Little Luxe Spa tretman"
+        ]
+        usluga = st.selectbox("Odaberite uslugu:", kategorije)
+        
+        datum = st.date_input("Datum:", min_value=datetime.today().date())
         vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        zauzeta_vremena = df_termini[df_termini["Datum"] == str(datum)]["Vrijeme"].values
-        slobodna_vremena = [v for v in vremena if v not in zauzeta_vremena]
+        vrijeme = st.selectbox("Vrijeme:", vremena)
         
-        if slobodna_vremena:
-            vrijeme = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
-            poslano = st.form_submit_button("Rezerviraj")
-        else:
-            st.warning("Svi termini za ovaj dan su zauzeti.")
-            poslano = False
-            
-        if poslano:
+        if st.form_submit_button("Rezerviraj"):
             if ime and kontakt:
-                spremi_termin(ime, kontakt, datum, vrijeme)
-                posalji_discord_obavijest(ime, kontakt, datum, vrijeme)
-                st.success(f"Uspjesno poslano! Rezervirali ste {datum} u {vrijeme}.")
+                spremi_termin(ime, kontakt, datum, vrijeme, usluga)
+                posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga)
+                st.success("Uspješno poslano!")
             else:
-                st.error("Molimo ispunite sva polja.")
+                st.error("Molimo unesite ime i kontakt.")
 
 elif stranica == "Admin Panel":
     st.title("🔐 Admin Pristup")
-    lozinka_input = st.text_input("Unesite lozinku za Admin Panel:", type="password")
+    lozinka = st.text_input("Lozinka:", type="password")
     
-    if lozinka_input == st.secrets["ADMIN_PASSWORD"]:
+    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         st.title("📥 Pristigli Termini")
-        df_termini = ucitaj_termine()
-        if not df_termini.empty:
-            st.dataframe(df_termini, use_container_width=True)
-        else:
-            st.write("Nema novih rezervacija.")
-    elif lozinka_input:
+        df = ucitaj_termine()
+        st.dataframe(df, use_container_width=True)
+        
+        if st.button("⚠️ Obriši sve termine"):
+            if os.path.exists(DB_FILE):
+                os.remove(DB_FILE)
+                st.rerun()
+    elif lozinka:
         st.error("Pogrešna lozinka!")
