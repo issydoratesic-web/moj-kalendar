@@ -14,9 +14,9 @@ def ucitaj_termine():
         return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
 
-def spremi_termin(ime, kontakt, dat_str, vrijeme, usluga, kod):
+def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga, kod):
     df = ucitaj_termine()
-    novi = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
+    novi = pd.DataFrame([{"Ime": ime_puno, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
@@ -44,8 +44,12 @@ usluge_mapa = {
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-ime = st.text_input("Ime i Prezime:")
+# --- UNOS KORISNIKA ---
+col_i, col_p = st.columns(2)
+with col_i: ime = st.text_input("Ime:")
+with col_p: prezime = st.text_input("Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
+
 kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
 if kat:
@@ -56,12 +60,8 @@ if kat:
         col1, col2, col3 = st.columns(3)
         with col1: dan = st.selectbox("Dan:", [str(i).zfill(2) for i in range(1, 32)])
         with col2: mjesec = st.selectbox("Mjesec:", [str(i).zfill(2) for i in range(1, 13)])
-        
-        # Raspon od trenutne godine do 2035.
-        aktualna_godina = datetime.now().year
-        raspon_godina = [str(g) for g in range(aktualna_godina, 2036)]
-        
-        with col3: godina = st.selectbox("Godina:", raspon_godina)
+        aktualna = datetime.now().year
+        with col3: godina = st.selectbox("Godina:", [str(g) for g in range(aktualna, 2036)])
         
         dat_str = f"{dan}/{mjesec}/{godina}"
         st.write(f"📅 Odabrani datum: **{dat_str}**")
@@ -72,16 +72,19 @@ if kat:
         vrijeme = st.selectbox("Vrijeme:", slobodni)
 
         if st.button("POTVRDI REZERVACIJU"):
-            if ime and kontakt:
+            if not ime.strip() or not prezime.strip() or not kontakt.strip():
+                st.error("❌ Molimo vas da upišete Ime, Prezime i Kontakt!")
+            else:
+                ime_puno = f"{ime.strip()} {prezime.strip()}"
                 kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                spremi_termin(ime, kontakt, dat_str, vrijeme, usluga, kod)
-                st.success(f"Uspješno! Kod: {kod}")
+                spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga, kod)
+                st.success(f"✅ Rezervacija potvrđena! Kod: {kod}")
                 time_module.sleep(2)
                 st.rerun()
 
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje")
-ime_pretraga = st.text_input("Ime za provjeru:")
+ime_pretraga = st.text_input("Ime i Prezime za provjeru:")
 if ime_pretraga:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.lower() == ime_pretraga.strip().lower()]
@@ -94,5 +97,4 @@ if ime_pretraga:
 with st.sidebar:
     st.header("🔐 Admin")
     if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
-        df_admin = ucitaj_termine()
-        st.dataframe(df_admin)
+        st.dataframe(ucitaj_termine())
