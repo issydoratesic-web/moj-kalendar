@@ -3,12 +3,13 @@ import pandas as pd
 from datetime import datetime
 import os
 import requests
-import time
+import time as time_module
 import random
 import string
 
 st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
 
+# --- FUNKCIJE ---
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         return pd.read_csv("termini.csv", dtype=str)
@@ -16,7 +17,7 @@ def ucitaj_termine():
 
 def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
     df = ucitaj_termine()
-    datum_str = datum_obj.strftime('%d/%m/%Y')
+    datum_str = datum_obj.strftime('%d/%m/%Y') # Forsiramo DD/MM/YYYY
     novi = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
@@ -26,37 +27,53 @@ def obrisi_termin(ime, datum, vrijeme):
     df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
     df.to_csv("termini.csv", index=False)
 
+# --- UI ---
 st.title("✨ Adora Beauty Concept")
+st.info("⚠️ Rezervacije i otkazivanje.")
 
-# --- REZERVACIJA ---
+usluge_mapa = {
+    "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
+    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€"],
+    "Tretmani lica": ["Enzimski piling - 25€", "Masaža i piling - 35€"],
+    "Frizure": ["Kratka kosa", "Duga kosa", "Punđa - 15€"],
+    "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
+}
+
+# --- NOVA REZERVACIJA ---
 ime = st.text_input("Ime i Prezime:")
-kontakt = st.text_input("Kontakt:")
-datum = st.date_input("Datum:", min_value=datetime.today())
-st.caption(f"Odabrani datum za bazu: {datum.strftime('%d/%m/%Y')}")
+kontakt = st.text_input("Kontakt (IG/Br):")
+kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
-df_svi = ucitaj_termine()
-dat_str = datum.strftime("%d/%m/%Y")
-zauzeti = df_svi[df_svi['Datum'] == dat_str]['Vrijeme'].tolist()
-slobodni = [f"{h:02d}:00" for h in range(8, 21) if f"{h:02d}:00" not in zauzeti]
-vrijeme = st.selectbox("Vrijeme:", slobodni)
+if kat:
+    usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
+    if usluga:
+        datum = st.date_input("Datum:", min_value=datetime.today())
+        st.caption(f"Datum spremanja u bazu: {datum.strftime('%d/%m/%Y')}")
+        
+        df_svi = ucitaj_termine()
+        dat_str = datum.strftime("%d/%m/%Y")
+        zauzeti = df_svi[df_svi['Datum'] == dat_str]['Vrijeme'].tolist()
+        slobodni = [f"{h:02d}:00" for h in range(8, 21) if f"{h:02d}:00" not in zauzeti]
+        vrijeme = st.selectbox("Vrijeme:", slobodni)
 
-if st.button("POTVRDI REZERVACIJU"):
-    if ime and kontakt:
-        kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-        spremi_termin(ime, kontakt, datum, vrijeme, "Usluga", kod)
-        st.success(f"Rezervirano! Kod: {kod}")
-        time.sleep(2)
-        st.rerun()
+        if st.button("POTVRDI REZERVACIJU"):
+            if ime and kontakt:
+                kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+                spremi_termin(ime, kontakt, datum, vrijeme, usluga, kod)
+                st.success(f"Uspješno! Kod: {kod}")
+                time_module.sleep(2)
+                st.rerun()
 
 # --- PROVJERA ---
 st.markdown("---")
-st.subheader("🔎 Provjera")
+st.subheader("🔎 Provjera i otkazivanje")
 ime_pretraga = st.text_input("Ime za provjeru:")
 if ime_pretraga:
-    moji = df_svi[df_svi['Ime'].str.lower() == ime_pretraga.strip().lower()]
+    df = ucitaj_termine()
+    moji = df[df['Ime'].str.lower() == ime_pretraga.strip().lower()]
     for idx, row in moji.iterrows():
-        st.write(f"{row['Datum']} u {row['Vrijeme']}")
-        if st.button(f"Otkazi {row['Vrijeme']}", key=f"b{idx}"):
+        st.write(f"Termin: {row['Usluga']} | Datum: {row['Datum']} | Vrijeme: {row['Vrijeme']}")
+        if st.button(f"❌ Otkazi {row['Vrijeme']}", key=f"b{idx}"):
             obrisi_termin(row['Ime'], row['Datum'], row['Vrijeme'])
             st.rerun()
 
