@@ -42,7 +42,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
-# Ovdje su cijene naznačene u izborniku za klijenta
+# Ovdje su cijene vidljive klijentu u izborniku
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
@@ -61,19 +61,19 @@ if stranica == "Rezerviraj Termin":
     kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
     usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
     
-    # Logika za frizure i točne cijene po dužini
-    puna_info = usluga
+    prikaz_za_rezervaciju = usluga
+    
+    # Logika za frizure: ako je frizura, bira se dužina i dodaje cijena
     if kat == "Frizure" and usluga in ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi"]:
         duzina = st.radio("Odaberite dužinu kose:", ["Kratka kosa", "Duga kosa"])
-        # Definiramo točne cijene ovdje
         cijene_frizura = {
             "Ravnanje kose": {"Kratka kosa": "10€", "Duga kosa": "20€"},
             "Uvijanje kose": {"Kratka kosa": "20€", "Duga kosa": "30€"},
             "Hollywood valovi": {"Kratka kosa": "25€", "Duga kosa": "35€"},
             "Elegantni repovi": {"Kratka kosa": "15€", "Duga kosa": "25€"}
         }
-        odabrana_cijena = cijene_frizura[usluga][duzina]
-        puna_info = f"{usluga} ({duzina} - {odabrana_cijena})"
+        cijena = cijene_frizura[usluga][duzina]
+        prikaz_za_rezervaciju = f"{usluga} ({duzina} - {cijena})"
 
     datum = st.date_input("Datum:", min_value=datetime.today().date())
     vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
@@ -81,7 +81,7 @@ if stranica == "Rezerviraj Termin":
     
     if st.button("Rezerviraj"):
         if ime and kontakt:
-            zapis = f"{kat} -> {puna_info}"
+            zapis = f"{kat} -> {prikaz_za_rezervaciju}"
             spremi_termin(ime, kontakt, datum, vrijeme, zapis)
             posalji_discord_obavijest(ime, kontakt, datum, vrijeme, zapis)
             st.success("Termin uspješno rezerviran!")
@@ -90,6 +90,7 @@ if stranica == "Rezerviraj Termin":
             st.error("Molimo ispunite ime i kontakt.")
 
 elif stranica == "Admin Panel":
+    # ... (admin kod ostaje isti)
     st.title("🔐 Admin Pristup")
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
