@@ -37,23 +37,15 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga, kod):
 
 def obrisi_termin(kod):
     df = ucitaj_termine()
-    termin = df[df['Kod'] == kod]
-    if not termin.empty:
-        podaci = termin.iloc[0].to_dict()
-        novi_df = df[df['Kod'] != kod]
-        novi_df.to_csv("termini.csv", index=False)
-        return podaci
-    return None
+    novi_df = df[df['Kod'] != kod]
+    novi_df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-st.info("""⚠️ **Napomena:**
-- Rezervaciju možete provjeriti ili otkazati putem koda dobivenog pri rezervaciji.
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.""")
+st.info("⚠️ **Napomena:** Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.")
 
 st.subheader("Nova rezervacija")
-
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
@@ -63,47 +55,60 @@ usluge_mapa = {
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-# ... (nakon st.subheader("Nova rezervacija"))
 ime = st.text_input("Ime i Prezime:")
+kontakt = st.text_input("Kontakt (IG/Br):")
+kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
-# ... (u dijelu gdje ide if odabrano_vrijeme and st.button(...))
-if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
-    # Provjera: mora sadržavati razmak (dakle barem ime i prezime)
-    if not ime or " " not in ime.strip():
-        st.warning("Molimo unesite puno ime i prezime (npr. Ana Anić).")
-    elif not kontakt:
-        st.warning("Molimo unesite kontakt.")
-    else:
-        kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-        spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-        posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-        st.success(f"✅ Uspješno! Vaš kod je: **{kod}**.")
-        time_module.sleep(3)
-        st.rerun()
-# --- PROVJERA REZERVACIJE I OTKAZIVANJE ---
+odabrano_vrijeme = None # Inicijalizacija
+
+if kat:
+    usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
+    if usluga:
+        col1, col2 = st.columns(2)
+        with col1: datum = st.date_input("Datum:", min_value=datetime.today())
+        with col2: 
+            df_svi = ucitaj_termine()
+            termini_na_taj_datum = df_svi[df_svi['Datum'] == datum.strftime("%d/%m/%Y")]
+            zauzeti_sati = termini_na_taj_datum['Vrijeme'].tolist()
+            svi_sati = [f"{h:02d}:00" for h in range(8, 21)]
+            slobodni_sati = [sat for sat in svi_sati if sat not in zauzeti_sati]
+            if slobodni_sati:
+                odabrano_vrijeme = st.selectbox("Odaberite slobodno vrijeme:", slobodni_sati)
+            else:
+                st.error("Nažalost, za ovaj datum nema više slobodnih termina.")
+
+        if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
+            if not ime or " " not in ime.strip():
+                st.warning("Molimo unesite puno ime i prezime.")
+            elif not kontakt:
+                st.warning("Molimo unesite kontakt.")
+            else:
+                kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+                spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
+                posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
+                st.success(f"✅ Uspješno! Vaš kod je: {kod}")
+                time_module.sleep(2)
+                st.rerun()
+
+# --- PROVJERA I OTKAZIVANJE ---
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje termina")
-
 ime_unos = st.text_input("Unesite PUNO ime i prezime za otkazivanje:")
 
 if ime_unos:
     df = ucitaj_termine()
-    # Tražimo termin (ignorišući velika/mala slova)
     moj_termin = df[df['Ime'].str.lower() == ime_unos.strip().lower()]
-    
     if not moj_termin.empty:
         termin = moj_termin.iloc[0]
         st.info(f"Pronađen termin: {termin['Usluga']} | {termin['Datum']} u {termin['Vrijeme']}")
-        
-        if st.button("❌ POTVRDI OTKAZIVANJE TERMINA"):
+        if st.button("❌ POTVRDI OTKAZIVANJE"):
             obrisi_termin(termin['Kod'])
-            st.success("Termin je uspješno otkazan.")
+            st.success("Termin otkazan.")
             st.rerun()
     else:
-        st.write("Nije pronađen termin za to ime. Provjerite jeste li unijeli puno ime i prezime.")
+        st.write("Nema termina za to ime.")
 
 # --- ADMIN SIDEBAR ---
-# Ovdje osiguravamo da je ovo novi blok koji započinje u novom retku
 with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
