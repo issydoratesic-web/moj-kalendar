@@ -112,7 +112,6 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
         with col2: 
-            # Filtriranje zauzetih termina
             df_svi = ucitaj_termine()
             termini_na_taj_datum = df_svi[df_svi['Datum'] == datum.strftime("%d/%m/%Y")]
             zauzeti_sati = termini_na_taj_datum['Vrijeme'].tolist()
@@ -136,17 +135,10 @@ if kat:
                 time_module.sleep(2)
                 st.rerun()
 
-# --- TAJNI ADMIN PANEL (SAMO TI GA VIDIŠ) ---
-# Provjera ima li u URL-u "?p=admin"
-if st.query_params.get("p") == "admin":
-    st.markdown("---")
-    st.subheader("🔐 Admin Login")
+# --- ADMIN PANEL U SIDEBARU ---
+with st.sidebar:
+    st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
-        st.subheader("📊 Popis svih termina")
+        st.subheader("Popis svih termina")
         st.dataframe(ucitaj_termine())
-        if st.button("Zatvori Admin panel"): 
-            st.query_params.clear() # Čisti URL i skriva panel
-            st.rerun()
-    elif lozinka:
-        st.error("Pogrešna lozinka!")
