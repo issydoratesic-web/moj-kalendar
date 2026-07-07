@@ -45,16 +45,12 @@ usluge_mapa = {
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-# JEDNOSTAVNA NAVIGACIJA (Gumbi na vrhu za mobitele)
-col_res, col_otk = st.columns(2)
-if col_res.button("📅 Nova Rezervacija"): st.session_state.stranica = "Rezervacija"
-if col_otk.button("❌ Otkazivanje"): st.session_state.stranica = "Otkazivanje"
+# Navigacija putem sidebara
+stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje"])
 
-if "stranica" not in st.session_state: st.session_state.stranica = "Rezervacija"
-
-if st.session_state.stranica == "Rezervacija":
-    st.info("""⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.""")
+if stranica == "📅 Rezervacija":
+    st.info("""⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge. 
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3""")
     
     ime = st.text_input("Ime i Prezime:")
     kontakt = st.text_input("Kontakt (IG/Br):")
@@ -72,7 +68,7 @@ if st.session_state.stranica == "Rezervacija":
                     time.sleep(1)
                     st.rerun()
 
-elif st.session_state.stranica == "Otkazivanje":
+elif stranica == "❌ Otkazivanje":
     st.subheader("❌ Otkazivanje termina")
     ime_klijenta = st.text_input("Unesite ime i prezime za pretragu:")
     if ime_klijenta:
