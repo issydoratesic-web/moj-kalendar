@@ -8,15 +8,17 @@ import time
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
 
-# --- FUNKCIJE ---
-DB_FILE = "termini.csv"
-
-def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
+# --- FUNKCIJE ZA DISCORD ---
+def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, tip="rezervacija"):
     try:
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
+        # Boja: Zelena za rezervaciju (3066993), Crvena za otkazivanje (15158332)
+        color = 3066993 if tip == "rezervacija" else 15158332
+        naslov = "🔔 Nova rezervacija!" if tip == "rezervacija" else "❌ Otkazan termin!"
+        
         data = {
-            "content": "🔔 **Nova rezervacija!**",
-            "embeds": [{"title": f"👤 Klijent: {ime}", "color": 15418782, "fields": [
+            "content": naslov,
+            "embeds": [{"title": f"👤 Klijent: {ime}", "color": color, "fields": [
                 {"name": "✂️ Usluga", "value": usluga, "inline": False},
                 {"name": "📱 Kontakt", "value": kontakt, "inline": False},
                 {"name": "📅 Datum", "value": datum, "inline": True},
@@ -24,6 +26,9 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
         }
         requests.post(DISCORD_WEBHOOK, json=data)
     except: pass
+
+# --- OSTALE FUNKCIJE ---
+DB_FILE = "termini.csv"
 
 def ucitaj_termine():
     if os.path.exists(DB_FILE): return pd.read_csv(DB_FILE)
@@ -54,7 +59,7 @@ if stranica == "📅 Rezervacija":
     col1, col2 = st.columns(2)
     with col1: ime = st.text_input("Ime i Prezime:")
     with col2: kontakt = st.text_input("Kontakt (IG/Br):")
-    kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None, placeholder="Odaberite...")
+    kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
     
     puna_usluga = None
     if kat:
@@ -72,8 +77,7 @@ if stranica == "📅 Rezervacija":
         datum_str = d_input.strftime("%d/%m/%Y")
         df = ucitaj_termine()
         zauzeti = df[df['Datum'] == datum_str]['Vrijeme'].tolist()
-        sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        dostupna = [v for v in sva_vremena if v not in zauzeti]
+        dostupna = [v for v in ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"] if v not in zauzeti]
         
         if dostupna:
             vrijeme = st.selectbox("Slobodno vrijeme:", dostupna)
@@ -82,11 +86,10 @@ if stranica == "📅 Rezervacija":
                     st.warning("Pričekajte 10 sekundi!")
                 elif ime and kontakt:
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
-                    posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
+                    posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga, tip="rezervacija")
                     st.session_state['zadnji_klik'] = time.time()
                     st.success("Termin uspješno rezerviran!")
-                    time.sleep(2)
-                    st.rerun()
+                    time.sleep(2); st.rerun()
 
 elif stranica == "❌ Otkazivanje":
     st.subheader("Otkazivanje termina")
@@ -102,16 +105,8 @@ elif stranica == "❌ Otkazivanje":
                 if d_termin - datetime.now() < timedelta(days=2):
                     st.error("Ne možete otkazati unutar 48 sati!")
                 else:
-                    df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].index)
+                    red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
+                    posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
+                    df = df.drop(red.name)
                     df.to_csv(DB_FILE, index=False)
-                    st.success("Termin otkazan.")
-                    time.sleep(2)
-                    st.rerun()
-
-elif stranica == "🔐 Admin Panel":
-    lozinka = st.text_input("Lozinka:", type="password")
-    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
-        st.dataframe(ucitaj_termine(), use_container_width=True)
-        if st.button("Obriši sve"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.rerun()
+                    st.success("
