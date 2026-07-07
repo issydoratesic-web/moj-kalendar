@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, time as dt_time
 import os
 import requests
-import time
+import time as time_module
 
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
@@ -82,13 +82,17 @@ kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None
 if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
     if usluga:
-        datum = st.date_input("Datum:", min_value=datetime.today())
+        col1, col2 = st.columns(2)
+        with col1: datum = st.date_input("Datum:", min_value=datetime.today())
+        with col2: vrijeme = st.time_input("Vrijeme:", value=dt_time(12, 0))
+        
         if st.button("POTVRDI REZERVACIJU"):
             if ime and kontakt:
-                spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), "12:00", usluga)
-                posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), "12:00", usluga)
+                vrijeme_str = vrijeme.strftime("%H:%M")
+                spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), vrijeme_str, usluga)
+                posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), vrijeme_str, usluga)
                 st.success("✅ Termin uspješno rezerviran!")
-                time.sleep(2)
+                time_module.sleep(2)
                 st.rerun()
 
 # --- ADMIN (Skriveno na dnu) ---
