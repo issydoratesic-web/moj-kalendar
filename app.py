@@ -42,6 +42,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
+# Definiramo mape s cijenama
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
@@ -60,10 +61,11 @@ if stranica == "Rezerviraj Termin":
     kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
     usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
     
-    # Logika za frizure i dužinu
+    # Logika za frizure: ako je odabrana frizura, pitamo za dužinu
     prikaz_usluge = usluga
     if kat == "Frizure" and usluga in ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi"]:
         duzina = st.radio("Odaberite dužinu kose:", ["Kratka kosa", "Duga kosa"])
+        # Definicija cijena po dužini
         cijene = {
             "Ravnanje kose": {"Kratka kosa": "10€", "Duga kosa": "20€"},
             "Uvijanje kose": {"Kratka kosa": "20€", "Duga kosa": "30€"},
@@ -71,7 +73,7 @@ if stranica == "Rezerviraj Termin":
             "Elegantni repovi": {"Kratka kosa": "15€", "Duga kosa": "25€"}
         }
         odabrana_cijena = cijene[usluga][duzina]
-        prikaz_usluge = f"{usluga} ({duzina}, {odabrana_cijena})"
+        prikaz_usluge = f"{usluga} ({duzina} - {odabrana_cijena})"
 
     datum = st.date_input("Datum:", min_value=datetime.today().date())
     vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
