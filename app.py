@@ -136,18 +136,17 @@ if kat:
                 time_module.sleep(2)
                 st.rerun()
 
-# --- ADMIN ---
-st.markdown("---")
-if st.button("🔐"):
-    st.session_state.admin_mode = True
-
-if st.session_state.get("admin_mode", False):
+# --- TAJNI ADMIN PANEL (SAMO TI GA VIDIŠ) ---
+# Provjera ima li u URL-u "?p=admin"
+if st.query_params.get("p") == "admin":
+    st.markdown("---")
+    st.subheader("🔐 Admin Login")
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
-        st.subheader("Admin Panel")
+        st.subheader("📊 Popis svih termina")
         st.dataframe(ucitaj_termine())
-        if st.button("Izlogiraj se"): 
-            st.session_state.admin_mode = False
+        if st.button("Zatvori Admin panel"): 
+            st.query_params.clear() # Čisti URL i skriva panel
             st.rerun()
     elif lozinka:
         st.error("Pogrešna lozinka!")
