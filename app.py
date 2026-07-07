@@ -27,14 +27,14 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, kod, tip="re
     except: pass
 
 def ucitaj_termine():
+    # Učitavamo kao tekst (dtype=str) kako se datumi ne bi formatirali naopako
     if os.path.exists("termini.csv"):
-        # Učitavamo datum strogo kao tekst (string) da se ne mijenja format
-        return pd.read_csv("termini.csv", dtype={'Datum': str})
+        return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
 
 def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
     df = ucitaj_termine()
-    # Prisilno formatiranje u string DD/MM/YYYY
+    # Strogo formatiranje u DD/MM/YYYY
     datum_str = datum_obj.strftime('%d/%m/%Y')
     novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
     df = pd.concat([df, novi_termin], ignore_index=True)
@@ -42,7 +42,7 @@ def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
 
 def obrisi_tocan_termin(ime, datum, vrijeme):
     df = ucitaj_termine()
-    # Brisanje retka koji točno odgovara unesenim podacima
+    # Brišemo redak gdje se sve podudara
     novi_df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
     novi_df.to_csv("termini.csv", index=False)
 
@@ -50,8 +50,8 @@ def obrisi_tocan_termin(ime, datum, vrijeme):
 st.title("✨ Adora Beauty Concept")
 
 st.info("""
-⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
+⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina.
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.
 """)
 
 usluge_mapa = {
@@ -74,8 +74,7 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: 
             datum = st.date_input("Datum:", min_value=datetime.today())
-            # OVO DODAJ:
-            st.caption(f"Odabrani datum: {datum.strftime('%d.%m.%Y.')}")
+            st.caption(f"Datum koji se sprema: {datum.strftime('%d.%m.%Y.')}")
         with col2:
             df_svi = ucitaj_termine()
             dat_str = datum.strftime("%d/%m/%Y")
@@ -92,7 +91,7 @@ if kat:
                 spremi_termin(ime.strip(), kontakt, datum, odabrano_vrijeme, usluga, kod)
                 posalji_discord_obavijest(ime.strip(), kontakt, dat_str, odabrano_vrijeme, usluga, kod)
                 st.success("Vaš termin je uspješno rezerviran!")
-                time_module.sleep(5)
+                time_module.sleep(3)
                 st.rerun()
 
 # --- PROVJERA I OTKAZIVANJE ---
@@ -114,8 +113,8 @@ with st.sidebar:
     if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
         df_a = ucitaj_termine()
         st.dataframe(df_a)
-        opcije = df_a.apply(lambda x: f"{x['Ime']} ({x['Datum']} - {x['Vrijeme']})", axis=1).tolist()
-        if opcije:
+        if not df_a.empty:
+            opcije = df_a.apply(lambda x: f"{x['Ime']} ({x['Datum']} - {x['Vrijeme']})", axis=1).tolist()
             odabrani = st.selectbox("Brisanje:", opcije)
             if st.button("OBRIŠI ODABRANI"):
                 dio = odabrani.split(" (")
