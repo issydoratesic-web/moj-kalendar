@@ -60,9 +60,9 @@ st.title("✨ Adora Beauty Concept")
 stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje", "🔐 Admin Panel"])
 
 if stranica == "📅 Rezervacija":
-    # OVDJE UPIŠI SVOJ IBAN U TEKST ISPOD
+    # Vraćena detaljna napomena
     st.info("⚠️ **Napomena:** \n"
-            "- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. \n"
+            "- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge. \n"
             "- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50% cijene) na IBAN: **HR03 2402 0061 1406 1395 3**")
     
     col1, col2 = st.columns(2)
@@ -95,12 +95,12 @@ if stranica == "📅 Rezervacija":
             vrijeme = st.selectbox("Slobodno vrijeme:", dostupna)
             if st.button("POTVRDI REZERVACIJU"):
                 if time.time() - st.session_state.get('zadnji_klik', 0) < 10:
-                    st.warning("Pričekajte 10 sekundi!")
+                    st.warning("Pričekajte 10 sekundi prije ponovnog klika!")
                 elif ime and kontakt:
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga, tip="rezervacija")
                     st.session_state['zadnji_klik'] = time.time()
-                    st.write("✅ Termin uspješno rezerviran!")
+                    st.success("✅ Termin uspješno rezerviran!")
                     time.sleep(2)
                     st.rerun()
 
@@ -118,7 +118,7 @@ elif stranica == "❌ Otkazivanje":
                 posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
                 df = df.drop(red.name)
                 df.to_csv(DB_FILE, index=False)
-                st.write("❌ Termin uspješno otkazan i obavijest poslana.")
+                st.success("❌ Termin uspješno otkazan i obavijest poslana.")
                 time.sleep(2)
                 st.rerun()
 
