@@ -119,3 +119,27 @@ if ime_otkazivanje:
 with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
+    
+    # OVDJE JE KLJUČNO DA JE OVO ISPRAVNO ZATVORENO
+    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
+        df_admin = ucitaj_termine()
+        st.subheader("Popis svih termina")
+        st.dataframe(df_admin)
+        
+        st.subheader("Brisanje (Admin)")
+        if not df_admin.empty:
+            opcije = df_admin.apply(lambda x: f"{x['Ime']} ({x['Datum']} - {x['Vrijeme']})", axis=1).tolist()
+            odabrani = st.selectbox("Odaberite termin za brisanje:", opcije)
+            
+            if st.button("OBRIŠI ODABRANI"):
+                dio = odabrani.split(" (")
+                ime_b = dio[0]
+                datum_vrijeme_b = dio[1].replace(")", "").split(" - ")
+                
+                # Poziv funkcije za brisanje
+                obrisi_tocan_termin(ime_b, datum_vrijeme_b[0], datum_vrijeme_b[1])
+                st.success(f"Termin za {ime_b} je obrisan!")
+                st.rerun()
+        else:
+            st.write("Nema termina za brisanje.")
+    # Ako lozinka nije točna, ništa se ne događa
