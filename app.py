@@ -32,6 +32,12 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
+def obrisi_termin(ime_klijenta):
+    df = ucitaj_termine()
+    novi_df = df[df['Ime'] != ime_klijenta]
+    novi_df.to_csv("termini.csv", index=False)
+    return True
+
 # --- DIALOG ZA OTKAZIVANJE ---
 @st.dialog("❌ Otkazivanje termina")
 def prozor_otkazivanje():
@@ -42,12 +48,22 @@ def prozor_otkazivanje():
         df = ucitaj_termine()
         termini = df[df['Ime'] == ime_klijenta]
         if not termini.empty:
-            st.write(termini)
-            st.warning("Za potvrdu otkazivanja nas kontaktirajte izravno.")
+            st.write("Pronađeni termin:", termini)
+            st.session_state.klijent_za_brisanje = ime_klijenta
         else:
             st.error("Nema pronađenih termina.")
     
+    if "klijent_za_brisanje" in st.session_state:
+        if st.button("POTVRDI OTKAZIVANJE"):
+            if obrisi_termin(st.session_state.klijent_za_brisanje):
+                st.success("Termin je uspješno otkazan!")
+                posalji_discord_obavijest(st.session_state.klijent_za_brisanje, "-", "-", "-", "-", tip="otkazivanje")
+                del st.session_state.klijent_za_brisanje
+                time_module.sleep(1)
+                st.rerun()
+    
     if st.button("Zatvori"):
+        if "klijent_za_brisanje" in st.session_state: del st.session_state.klijent_za_brisanje
         st.rerun()
 
 # --- UI ---
@@ -82,7 +98,6 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
         with col2: 
-            # Generiranje liste sati od 08:00 do 20:00 (razmak od sat vremena)
             sati = [f"{h:02d}:00" for h in range(8, 21)]
             odabrano_vrijeme = st.selectbox("Odaberite vrijeme:", sati)
         
