@@ -6,7 +6,7 @@ import requests
 import time
 
 # --- KONFIGURACIJA ---
-st.set_config = st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
+st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
 
 # --- FUNKCIJE ---
 def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, tip="rezervacija"):
@@ -26,10 +26,26 @@ def ucitaj_termine():
     if os.path.exists("termini.csv"): return pd.read_csv("termini.csv")
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
 
+def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
+    df = ucitaj_termine()
+    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum, "Vrijeme": vrijeme, "Usluga": usluga}])
+    df = pd.concat([df, novi_termin], ignore_index=True)
+    df.to_csv("termini.csv", index=False)
+
+# --- PODACI ---
+usluge_mapa = {
+    "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
+    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
+    "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
+    "Frizure": ["Kratka kosa", "Duga kosa", "Punđa - 15€"],
+    "Ostale usluge": ["Relax zona - 25€"],
+    "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
+}
+
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-# Ovdje je navigacija bez Admin Panela
+# Navigacija bez Admin Panela
 stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje"])
 
 if stranica == "📅 Rezervacija":
@@ -38,12 +54,38 @@ if stranica == "📅 Rezervacija":
 - Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
 - **Ako želite otkazati termin, otvorite izbornik (dvije strelice gore lijevo) i odaberite 'Otkazivanje'.**""")
     
-    # ... (ostatak koda za rezervaciju ostaje isti) ...
+    col1, col2 = st.columns(2)
+    with col1: ime = st.text_input("Ime i Prezime:")
+    with col2: kontakt = st.text_input("Kontakt (IG/Br):")
+    kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
+    
+    if kat:
+        usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
+        if usluga:
+            d_input = st.date_input("Datum:", min_value=datetime.today(), format="DD/MM/YYYY")
+            datum_str = d_input.strftime("%d/%m/%Y")
+            if st.button("POTVRDI REZERVACIJU"):
+                if ime and kontakt:
+                    spremi_termin(ime, kontakt, datum_str, "12:00", usluga)
+                    posalji_discord_obavijest(ime, kontakt, datum_str, "12:00", usluga)
+                    st.success("✅ Termin uspješno rezerviran!")
+                    time.sleep(2)
+                    st.rerun()
 
 elif stranica == "❌ Otkazivanje":
-    # ... (kod za otkazivanje ostaje isti) ...
+    st.subheader("Otkazivanje termina")
+    ime_klijenta = st.text_input("Unesite puno ime i prezime:")
+    if ime_klijenta:
+        df = ucitaj_termine()
+        termini = df[df['Ime'] == ime_klijenta]
+        if not termini.empty:
+            odabrani = st.selectbox("Odaberite termin:", termini['Datum'] + " u " + termini['Vrijeme'])
+            if st.button("POTVRDI OTKAZIVANJE"):
+                st.error("Ne možete otkazati unutar 24 sata prije termina!")
+        else:
+            st.write("Nema pronađenih termina za ovo ime.")
 
-# --- SKRIVENI ADMIN PANEL ---
+# --- SKRIVENI ADMIN PANEL (Zasebna sekcija, van if/elif petlje) ---
 st.markdown("---")
 if st.button("🔐 Pristup za administratora"):
     st.session_state.admin_mode = True
@@ -53,6 +95,8 @@ if st.session_state.get("admin_mode", False):
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         st.subheader("Admin Panel")
         st.dataframe(ucitaj_termine())
-        if st.button("Izlogiraj se"): st.session_state.admin_mode = False
+        if st.button("Izlogiraj se"): 
+            st.session_state.admin_mode = False
+            st.rerun()
     elif lozinka:
         st.error("Pogrešna lozinka!")
