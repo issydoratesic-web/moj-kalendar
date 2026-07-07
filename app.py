@@ -10,6 +10,9 @@ from email.mime.multipart import MIMEMultipart
 GMAIL_USER = "adorabeatyconcept.official0@gmail.com"
 GMAIL_PASSWORD = "deyyhofxxqnwotat"
 
+# Ovdje upiši svoj Hotmail na koji želiš primati obavijesti:
+HOTMAIL_USER = "bagercro@hotmail.com"
+
 def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
     naslov = f"Nova rezervacija: {ime}"
     
@@ -28,15 +31,16 @@ def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
     
     msg = MIMEMultipart()
     msg['From'] = GMAIL_USER
-    msg['To'] = GMAIL_USER
+    msg['To'] = HOTMAIL_USER  # Mail sada putuje na tvoj Hotmail!
     msg['Subject'] = naslov
     msg.attach(MIMEText(tijelo_maila, 'plain', 'utf-8'))
     
     try:
+        # Koristimo izravnu i sigurnu SSL vezu preko porta 465
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(GMAIL_USER, GMAIL_PASSWORD)
         text = msg.as_string()
-        server.sendmail(GMAIL_USER, GMAIL_USER, text)
+        server.sendmail(GMAIL_USER, HOTMAIL_USER, text)
         server.quit()
     except Exception as e:
         print(f"Greska pri slanju maila: {e}")
