@@ -2,48 +2,35 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 
 def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
-    # Sustav ovdje sigurno povlači tvoje podatke iz skrivenih postavki
+    # Sustav sigurno povlači tvoj Hotmail iz postavki
     try:
-        GMAIL_USER = st.secrets["GMAIL_USER"]
-        GMAIL_PASSWORD = st.secrets["GMAIL_PASSWORD"]
         HOTMAIL_USER = st.secrets["HOTMAIL_USER"]
     except Exception as e:
-        st.error("Nedostaju postavke u Streamlit Secrets!")
+        st.error("Nedostaje HOTMAIL_USER u Streamlit Secrets!")
         return
 
-    naslov = f"⚠️ Nova rezervacija: {ime}"
+    naslov = f"Nova rezervacija: {ime}"
     tijelo_maila = (
-        f"Pozdrav,\n\n"
-        f"Imate novu rezervaciju termina preko web aplikacije!\n\n"
-        f"Detalji:\n"
-        f"-------------------------------------------\n"
-        f"👤 Ime i prezime: {ime}\n"
-        f"📱 Instagram / Kontakt: {kontakt}\n"
-        f"📅 Datum: {datum}\n"
-        f"⏰ Vrijeme: {vrijeme}\n"
-        f"-------------------------------------------\n\n"
-        f"Ugodan rad zeli vam vas sustav!"
+        f"Imate novu rezervaciju!\n\n"
+        f"Ime i prezime: {ime}\n"
+        f"Instagram / Kontakt: {kontakt}\n"
+        f"Datum: {datum}\n"
+        f"Vrijeme: {vrijeme}"
     )
     
-    msg = MIMEMultipart()
-    msg['From'] = GMAIL_USER
-    msg['To'] = HOTMAIL_USER
-    msg['Subject'] = naslov
-    msg.attach(MIMEText(tijelo_maila, 'plain', 'utf-8'))
-    
+    # Šaljemo izravno preko besplatnog FormSubmit servisa bez lozinki
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.login(GMAIL_USER, GMAIL_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(GMAIL_USER, HOTMAIL_USER, text)
-        server.quit()
+        response = requests.post(f"https://formsubmit.co/ajax/{HOTMAIL_USER}", data={
+            "_subject": naslov,
+            "Detalji": tijelo_maila
+        })
+        if response.status_code != 200:
+            st.error("Servis za slanje trenutno nije dostupan.")
     except Exception as e:
-        st.error(f"Kritična greška kod slanja: {e}")
+        st.error(f"Greška kod slanja: {e}")
 
 # --- BAZA PODATAKA ---
 DB_FILE = "termini.csv"
@@ -61,7 +48,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme):
 
 # --- GLAVNI PROGRAM ---
 st.set_page_config(page_title="Rezervacija Termina", layout="centered")
-stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel (Za tebe)"])
+stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
 if stranica == "Rezerviraj Termin":
     st.title("📅 Rezervirajte svoj termin")
@@ -80,7 +67,7 @@ if stranica == "Rezerviraj Termin":
             vrijeme = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
             poslano = st.form_submit_button("Rezerviraj")
         else:
-            st.warning("Nažalost, svi termini za ovaj dan su zauzeti.")
+            st.warning("Svi termini za ovaj dan su zauzeti.")
             poslano = False
             
         if poslano:
@@ -91,7 +78,7 @@ if stranica == "Rezerviraj Termin":
             else:
                 st.error("Molimo ispunite sva polja.")
 
-elif stranica == "Admin Panel (Za tebe)":
+elif stranica == "Admin Panel":
     st.title("📥 Pristigli Termini")
     df_termini = ucitaj_termine()
     if not df_termini.empty:
