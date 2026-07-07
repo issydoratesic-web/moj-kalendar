@@ -7,23 +7,23 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 GMAIL_USER = "adorabeatyconcept.official0@gmail.com"
-GMAIL_PASSWORD = "tiox yxkg rbfl bnic"
+GMAIL_PASSWORD = "tioxyxkgrbflbnic"
 
 def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
-    naslov = f"⚠️ Nova rezervacija: {ime}"
-    tijelo_maila = f"""Pozdrav,
+    naslov = f"Nova rezervacija: {ime}"
     
-Imate novu rezervaciju termina preko web aplikacije!
-    
-Detalji:
--------------------------------------------
-👤 Ime i prezime: {ime}
-📱 Instagram / Kontakt: {kontakt}
-📅 Datum: {datum}
-⏰ Vrijeme: {vrijeme}
--------------------------------------------
-    
-Ugodan rad želi vam vaš sustav!"""
+    tijelo_maila = (
+        f"Pozdrav,\n\n"
+        f"Imate novu rezervaciju termina preko web aplikacije!\n\n"
+        f"Detalji:\n"
+        f"-------------------------------------------\n"
+        f"Ime i prezime: {ime}\n"
+        f"Instagram / Kontakt: {kontakt}\n"
+        f"Datum: {datum}\n"
+        f"Vrijeme: {vrijeme}\n"
+        f"-------------------------------------------\n\n"
+        f"Ugodan rad zeli vam vas sustav!"
+    )
     
     msg = MIMEMultipart()
     msg['From'] = GMAIL_USER
@@ -39,7 +39,8 @@ Ugodan rad želi vam vaš sustav!"""
         server.sendmail(GMAIL_USER, GMAIL_USER, text)
         server.quit()
     except Exception as e:
-        pass
+        # Ako mail ne ode, ovdje ispisujemo gresku u logovima za provjeru
+        print(f"Greska pri slanju maila: {e}")
 
 DB_FILE = "termini.csv"
 
@@ -55,7 +56,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme):
         "Kontakt": kontakt, 
         "Datum": str(datum), 
         "Vrijeme": vrijeme, 
-        "Status": "Na čekanju"
+        "Status": "Na cekanju"
     }])
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
@@ -65,14 +66,14 @@ st.set_page_config(page_title="Rezervacija Termina", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel (Za tebe)"])
 
 if stranica == "Rezerviraj Termin":
-    st.title("📅 Rezervirajte svoj termin")
-    st.write("Odaberite datum i vrijeme koji vam odgovaraju, a ja ću vam se javiti za potvrdu.")
+    st.title("Rezervirajte svoj termin")
+    st.write("Odaberite datum i vrijeme koji vam odgovaraju, a ja cu vam se javiti za potvrdu.")
     
     df_termini = ucitaj_termine()
     
     with st.form("rezervacija_forma", clear_on_submit=True):
-        ime = st.text_input("Vaše Ime i Prezime:")
-        kontakt = st.text_input("Vaš Instagram username ili broj mobitela:")
+        ime = st.text_input("Vase Ime i Prezime:")
+        kontakt = st.text_input("Vas Instagram username ili broj mobitela:")
         datum = st.date_input("Odaberite datum:", min_value=datetime.today().date())
         
         vremena = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"]
@@ -83,25 +84,25 @@ if stranica == "Rezerviraj Termin":
             vrijeme = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
             poslano = st.form_submit_button("Rezerviraj")
         else:
-            st.warning("Nažalost, svi termini za ovaj dan su zauzeti. Odaberite drugi datum.")
+            st.warning("Nazalost, svi termini za ovaj dan su zauzeti. Odaberite drugi datum.")
             poslano = False
             
         if poslano:
             if ime and kontakt:
                 spremi_termin(ime, kontakt, datum, vrijeme)
                 posalji_email_obavijest(ime, kontakt, datum, vrijeme)
-                st.success(f"Uspješno poslano! Rezervirali ste {datum} u {vrijeme}. Javit ću vam se uskoro!")
+                st.success(f"Uspjesno poslano! Rezervirali ste {datum} u {vrijeme}. Javit cu vam se uskoro!")
             else:
                 st.error("Molimo ispunite sva polja.")
 
 elif stranica == "Admin Panel (Za tebe)":
-    st.title("📥 Pristigli Termini")
+    st.title("Pristigli Termini")
     df_termini = ucitaj_termine()
     if df_termini.empty:
-        st.info("Još nema zakazanih termina.")
+        st.info("Jos nema zakazanih termina.")
     else:
         st.dataframe(df_termini, use_container_width=True)
-        if st.button("Očisti sve termine"):
+        if st.button("Ocisti sve termine"):
             if os.path.exists(DB_FILE):
                 os.remove(DB_FILE)
                 st.rerun()
