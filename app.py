@@ -56,7 +56,9 @@ stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje"
 
 if stranica == "📅 Rezervacija":
     # Napomena za klijente
-    st.info("⚠️ **Napomena:** Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.")
+    st.info("⚠️ **Napomena:** \n"
+            "- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge. \n"
+            "- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju koja iznosi 50% cijene termina!")
     
     col1, col2 = st.columns(2)
     with col1: ime = st.text_input("Ime i Prezime:")
@@ -84,46 +86,4 @@ if stranica == "📅 Rezervacija":
         sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
         dostupna = [v for v in sva_vremena if v not in zauzeti]
         
-        if dostupna:
-            vrijeme = st.selectbox("Slobodno vrijeme:", dostupna)
-            if st.button("POTVRDI REZERVACIJU"):
-                if time.time() - st.session_state.get('zadnji_klik', 0) < 10:
-                    st.warning("Pričekajte 10 sekundi!")
-                elif ime and kontakt:
-                    spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
-                    posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga, tip="rezervacija")
-                    st.session_state['zadnji_klik'] = time.time()
-                    st.write("✅ Termin uspješno rezerviran!")
-                    time.sleep(2)
-                    st.rerun()
-
-elif stranica == "❌ Otkazivanje":
-    st.subheader("Otkazivanje termina")
-    ime_klijenta = st.text_input("Unesite ime:")
-    if ime_klijenta:
-        df = ucitaj_termine()
-        termini = df[df['Ime'] == ime_klijenta]
-        if not termini.empty:
-            odabrani = st.selectbox("Odaberite termin:", termini['Datum'] + " u " + termini['Vrijeme'])
-            if st.button("POTVRDI OTKAZIVANJE"):
-                d_str = odabrani.split(" u ")[0]
-                d_termin = datetime.strptime(d_str, "%d/%m/%Y")
-                # Provjera roka od 24 sata
-                if d_termin - datetime.now() < timedelta(hours=24):
-                    st.error("Ne možete otkazati unutar 24 sata prije termina!")
-                else:
-                    red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
-                    posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
-                    df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].index)
-                    df.to_csv(DB_FILE, index=False)
-                    st.write("❌ Termin otkazan, obavijest poslana.")
-                    time.sleep(2)
-                    st.rerun()
-
-elif stranica == "🔐 Admin Panel":
-    lozinka = st.text_input("Lozinka:", type="password")
-    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
-        st.dataframe(ucitaj_termine(), use_container_width=True)
-        if st.button("Obriši sve"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.rerun()
+        if dostupna
