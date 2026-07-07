@@ -29,7 +29,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, kod, tip="re
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         df = pd.read_csv("termini.csv")
-        # Prisilno formatiranje datuma u DD/MM/YYYY
+        # Osiguravamo DD/MM/YYYY format datuma
         df['Datum'] = pd.to_datetime(df['Datum'], dayfirst=True, errors='coerce').dt.strftime('%d/%m/%Y')
         return df
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
@@ -42,23 +42,21 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga, kod):
 
 def obrisi_tocan_termin(ime, datum, vrijeme):
     df = ucitaj_termine()
-    # Čišćenje imena i usporedba
-    novi_df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & 
-                    (df['Datum'] == datum) & 
-                    (df['Vrijeme'] == vrijeme))]
+    novi_df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
     novi_df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
+# ISPRAVNA NAPOMENA
 st.info("""
-⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.
+⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
 """)
 
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
-    "Oblikovanje obrva": ["Pinceta - 8€", "Oblikovanje i bojanje - 15€", "Brow lift - 30€"],
+    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€"],
     "Tretmani lica": ["Enzimski piling - 25€", "Masaža i piling - 35€"],
     "Frizure": ["Kratka kosa", "Duga kosa", "Punđa - 15€"],
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
@@ -83,7 +81,7 @@ if kat:
             slobodni = [f"{h:02d}:00" for h in range(8, 21) if f"{h:02d}:00" not in zauzeti]
             odabrano_vrijeme = st.selectbox("Vrijeme:", slobodni) if slobodni else st.error("Nema slobodnih termina.")
 
-        if 'odabrano_vrijeme' in locals() and odabrano_vrijeme and st.button("POTVRDI"):
+        if 'odabrano_vrijeme' in locals() and odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
             if not ime or " " not in ime.strip():
                 st.warning("Unesite puno ime i prezime.")
             else:
