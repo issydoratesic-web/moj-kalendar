@@ -105,17 +105,29 @@ if ime_otkazivanje:
     else:
         st.write("Nema termina za to puno ime i prezime.")
 
-# --- ADMIN PANEL ---
+# --- ADMIN SIDEBAR ---
 with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
+    
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         df_admin = ucitaj_termine()
+        st.subheader("Popis svih termina")
         st.dataframe(df_admin)
         
         st.subheader("Brisanje (Admin)")
-        ime_za_brisanje = st.text_input("Upišite ime klijenta za brisanje:")
-        if st.button("OBRIŠI KLIJENTA"):
-            obrisi_termin_po_imenu(ime_za_brisanje)
-            st.success("Obrisano!")
-            st.rerun()
+        
+        # Stvaramo listu termina za padajući izbornik
+        if not df_admin.empty:
+            # Formatiramo prikaz u izborniku: Ime - Datum - Vrijeme
+            opcije_termina = df_admin.apply(lambda x: f"{x['Ime']} ({x['Datum']} - {x['Vrijeme']})", axis=1).tolist()
+            odabrani_za_bris = st.selectbox("Odaberite termin za brisanje:", opcije_termina)
+            
+            if st.button("OBRIŠI ODABRANI TERMIN"):
+                # Pronalazimo ime iz stringa (vraćamo dio prije zagrade)
+                ime_za_brisanje = odabrani_za_bris.split(" (")[0]
+                obrisi_termin_po_imenu(ime_za_brisanje)
+                st.success(f"Obrisan termin za: {ime_za_brisanje}")
+                st.rerun()
+        else:
+            st.write("Nema termina za brisanje.")
