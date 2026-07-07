@@ -8,32 +8,7 @@ import time
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✨", layout="centered")
 
-# --- CSS ZA POZADINU I DIZAJN ---
-# NAPOMENA: Zamijeni URL u 'background-image' sa svojom slikom kada je nađeš.
-st.markdown("""
-    <style>
-    .stApp { 
-        background-image: url("https://tvoj-link-do-slike.jpg"); 
-        background-size: cover;
-        background-position: center;
-    }
-    .stButton>button { 
-        width: 100%; 
-        border-radius: 20px; 
-        background-color: #d4a373; 
-        color: white; 
-        font-weight: bold; 
-        border: none;
-    }
-    .stButton>button:hover { background-color: #bc8a5f; }
-    .stTextInput>div>div>input, .stSelectbox>div>div>div {
-        border-radius: 10px;
-        border: 1px solid #d4a373;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
-    h1, h2, h3 { color: #5c4a3d; background-color: rgba(255, 255, 255, 0.5); padding: 10px; border-radius: 10px; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- NAPOMENA: CSS JE UKLONJEN KAKO BI SE VRATIO IZVORNI DARK MODE ---
 
 # --- FUNKCIJE ---
 def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
@@ -41,7 +16,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
         data = {
             "content": "🔔 **Nova rezervacija!**",
-            "embeds": [{"title": f"👤 Klijent: {ime}", "color": 13935987, "fields": [
+            "embeds": [{"title": f"👤 Klijent: {ime}", "color": 15418782, "fields": [
                 {"name": "✂️ Usluga", "value": usluga, "inline": False},
                 {"name": "📱 Kontakt", "value": kontakt, "inline": False},
                 {"name": "📅 Datum", "value": datum, "inline": True},
@@ -120,7 +95,6 @@ if stranica == "📅 Rezervacija":
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.session_state['zadnji_klik'] = time.time()
                     
-                    # POTVRDA (4 sekunde)
                     placeholder = st.empty()
                     placeholder.success("Termin uspješno rezerviran!")
                     time.sleep(4)
@@ -140,3 +114,6 @@ elif stranica == "🔐 Admin Panel":
         st.subheader("🗑️ Brisanje termina")
         if not df.empty:
             df['Display'] = df['Datum'] + " u " + df['Vrijeme'] + " - " + df['Ime']
+            odabir = st.selectbox("Odaberite termin za brisanje:", df['Display'].tolist())
+            if st.button("Obriši odabrani termin"):
+                idx = df[df['Display'] == odab
