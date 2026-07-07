@@ -8,10 +8,15 @@ import time
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✨", layout="centered")
 
-# --- CSS ZA TOPLIJI IZGLED ---
+# --- CSS ZA POZADINU I DIZAJN ---
+# NAPOMENA: Zamijeni URL u 'background-image' sa svojom slikom kada je nađeš.
 st.markdown("""
     <style>
-    .stApp { background-color: #fdfaf6; }
+    .stApp { 
+        background-image: url("https://tvoj-link-do-slike.jpg"); 
+        background-size: cover;
+        background-position: center;
+    }
     .stButton>button { 
         width: 100%; 
         border-radius: 20px; 
@@ -24,8 +29,9 @@ st.markdown("""
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px;
         border: 1px solid #d4a373;
+        background-color: rgba(255, 255, 255, 0.8);
     }
-    h1, h2, h3 { color: #6f5c49; }
+    h1, h2, h3 { color: #5c4a3d; background-color: rgba(255, 255, 255, 0.5); padding: 10px; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -114,6 +120,7 @@ if stranica == "📅 Rezervacija":
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.session_state['zadnji_klik'] = time.time()
                     
+                    # POTVRDA (4 sekunde)
                     placeholder = st.empty()
                     placeholder.success("Termin uspješno rezerviran!")
                     time.sleep(4)
@@ -133,16 +140,3 @@ elif stranica == "🔐 Admin Panel":
         st.subheader("🗑️ Brisanje termina")
         if not df.empty:
             df['Display'] = df['Datum'] + " u " + df['Vrijeme'] + " - " + df['Ime']
-            odabir = st.selectbox("Odaberite termin za brisanje:", df['Display'].tolist())
-            if st.button("Obriši odabrani termin"):
-                idx = df[df['Display'] == odabir].index[0]
-                df = df.drop(idx)
-                df.drop(columns=['Display']).to_csv(DB_FILE, index=False)
-                st.success("Termin obrisan, vrijeme je sada slobodno.")
-                time.sleep(2)
-                st.rerun()
-        
-        if st.button("⚠️ Obriši SVE termine"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.rerun()
-    elif lozinka: st.error("Pogrešna lozinka!")
