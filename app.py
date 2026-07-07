@@ -9,9 +9,9 @@ import string
 
 st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
 
+# --- FUNKCIJE ---
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
-        # Učitavamo kao tekst da datum ostane DD/MM/YYYY
         return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
 
@@ -22,11 +22,14 @@ def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
-def obrisi_termin(ime, datum, vrijeme):
+def obrisi_termin(ime, datum_str, vrijeme):
     df = ucitaj_termine()
-    df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
+    # Strogo filtriranje po string vrijednostima
+    mask = (df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum_str) & (df['Vrijeme'] == vrijeme)
+    df = df[~mask]
     df.to_csv("termini.csv", index=False)
 
+# --- UI ---
 st.title("✨ Adora Beauty Concept")
 
 usluge_mapa = {
@@ -48,7 +51,8 @@ if kat:
         st.markdown(f"**Odabrani datum:** `{datum.strftime('%d/%m/%Y')}`")
         
         df_svi = ucitaj_termine()
-        zauzeti = df_svi[df_svi['Datum'] == datum.strftime('%d/%m/%Y')]['Vrijeme'].tolist()
+        dat_str = datum.strftime("%d/%m/%Y")
+        zauzeti = df_svi[df_svi['Datum'] == dat_str]['Vrijeme'].tolist()
         slobodni = [f"{h:02d}:00" for h in range(8, 21) if f"{h:02d}:00" not in zauzeti]
         vrijeme = st.selectbox("Vrijeme:", slobodni)
 
@@ -61,18 +65,29 @@ if kat:
                 st.rerun()
 
 st.markdown("---")
-st.subheader("🔎 Provjera")
+st.subheader("🔎 Provjera i otkazivanje")
 ime_pretraga = st.text_input("Ime za provjeru:")
 if ime_pretraga:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.lower() == ime_pretraga.strip().lower()]
     for idx, row in moji.iterrows():
         st.write(f"{row['Usluga']} | {row['Datum']} u {row['Vrijeme']}")
-        if st.button(f"Otkazi {row['Vrijeme']}", key=f"b{idx}"):
+        if st.button(f"❌ Otkazi termin {row['Vrijeme']}", key=f"b{idx}"):
             obrisi_termin(row['Ime'], row['Datum'], row['Vrijeme'])
             st.rerun()
 
+# --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
     if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
-        st.dataframe(ucitaj_termine())
+        df_admin = ucitaj_termine()
+        st.dataframe(df_admin)
+        
+        if not df_admin.empty:
+            # Izbornik za brisanje
+            opcije = df_admin.apply(lambda x: f"{x['Ime']} - {x['Datum']} - {x['Vrijeme']}", axis=1).tolist()
+            odabrani = st.selectbox("Odaberi za brisanje:", opcije)
+            if st.button("OBRIŠI ODABRANI"):
+                ime_adm, dat_adm, vr_adm = odabrani.split(" - ")
+                obrisi_termin(ime_adm, dat_adm, vr_adm)
+                st.rerun()
