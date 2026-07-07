@@ -22,12 +22,10 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
             }]
         }
         requests.post(DISCORD_WEBHOOK, json=data)
-    except:
-        pass
+    except: pass
 
 # --- BAZA PODATAKA ---
 DB_FILE = "termini.csv"
-
 def ucitaj_termine():
     if os.path.exists(DB_FILE): return pd.read_csv(DB_FILE)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Status"])
@@ -58,37 +56,36 @@ frizure_po_duzini = {
 
 if stranica == "Rezerviraj Termin":
     st.title("📅 Adora Beauty Concept")
-    
     ime = st.text_input("Ime i Prezime:")
     kontakt = st.text_input("Kontakt (Instagram/Broj):")
     
-    kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
+    kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None, placeholder="Odaberite kategoriju...")
     
-    if kat == "Frizure":
-        odabir_duzine = st.selectbox("Odaberite dužinu ili frizuru:", list(usluge_mapa["Frizure"]))
-        if odabir_duzine in frizure_po_duzini:
-            usluga = st.selectbox("Odaberite uslugu:", frizure_po_duzini[odabir_duzine])
-            puna_usluga = f"{kat} -> {odabir_duzine} -> {usluga}"
+    puna_usluga = None
+    if kat:
+        if kat == "Frizure":
+            odabir = st.selectbox("Odaberite dužinu ili frizuru:", list(usluge_mapa["Frizure"]), index=None, placeholder="Odaberite...")
+            if odabir:
+                if odabir in frizure_po_duzini:
+                    usluga = st.selectbox("Odaberite uslugu:", frizure_po_duzini[odabir], index=None, placeholder="Odaberite uslugu...")
+                    if usluga: puna_usluga = f"{kat} -> {odabir} -> {usluga}"
+                else: puna_usluga = f"{kat} -> {odabir}"
         else:
-            puna_usluga = f"{kat} -> {odabir_duzine}"
-    else:
-        usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
-        puna_usluga = f"{kat} -> {usluga}"
+            usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat], index=None, placeholder="Odaberite uslugu...")
+            if usluga: puna_usluga = f"{kat} -> {usluga}"
     
-    # Datum s normalnim formatom
-    datum = st.date_input("Datum:", min_value=datetime.today().date(), format="DD/MM/YYYY")
-    
-    vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-    vrijeme = st.selectbox("Vrijeme:", vremena)
-    
-    if st.button("Rezerviraj"):
-        if ime and kontakt:
-            spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
-            posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
-            st.success("Termin uspješno rezerviran!")
-            st.rerun()
-        else:
-            st.error("Molimo ispunite ime i kontakt.")
+    if puna_usluga:
+        datum = st.date_input("Datum:", min_value=datetime.today().date(), format="DD/MM/YYYY")
+        vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+        vrijeme = st.selectbox("Vrijeme:", vremena)
+        
+        if st.button("Rezerviraj"):
+            if ime and kontakt:
+                spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
+                posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
+                st.success("Termin uspješno rezerviran!")
+                st.rerun()
+            else: st.error("Molimo ispunite ime i kontakt.")
 
 elif stranica == "Admin Panel":
     st.title("🔐 Admin Pristup")
@@ -101,5 +98,4 @@ elif stranica == "Admin Panel":
             if os.path.exists(DB_FILE):
                 os.remove(DB_FILE)
                 st.rerun()
-    elif lozinka:
-        st.error("Pogrešna lozinka!")
+    elif lozinka: st.error("Pogrešna lozinka!")
