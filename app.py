@@ -94,13 +94,18 @@ if stranica == "📅 Rezervacija":
             if st.button("POTVRDI REZERVACIJU"):
                 zadnji = st.session_state.get('zadnji_klik', 0)
                 if time.time() - zadnji < 10:
-                    st.warning("Pričekajte 10 sekundi prije nove rezervacije!")
+                    st.warning("Molimo pričekajte 10 sekundi prije nove rezervacije!")
                 elif ime and kontakt:
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.session_state['zadnji_klik'] = time.time()
                     st.balloons()
-                    st.success("Termin uspješno rezerviran!")
+                    
+                    # POTVRDA KOJA TRAJE 4 SEKUNDE
+                    placeholder = st.empty()
+                    placeholder.success("Termin uspješno rezerviran!")
+                    time.sleep(4)
+                    placeholder.empty()
                     st.rerun()
                 else: st.error("Ispunite ime i kontakt.")
         else: st.warning("Nema slobodnih termina za odabrani datum.")
@@ -122,6 +127,7 @@ elif stranica == "🔐 Admin Panel":
                 df = df.drop(idx)
                 df.drop(columns=['Display']).to_csv(DB_FILE, index=False)
                 st.success("Termin obrisan, vrijeme je sada slobodno.")
+                time.sleep(2)
                 st.rerun()
         
         if st.button("⚠️ Obriši SVE termine"):
