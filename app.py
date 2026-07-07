@@ -42,19 +42,19 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
+# Mapa s cijenama
 usluge_mapa = {
-    "Šminkanje": ["Šminkanje", "Terensko šminkanje"],
-    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom", "Oblikovanje i bojanje obrva", "Brow lift", "Brow lift i bojanje"],
-    "Tretmani lica": ["Enzimski piling", "Blagi mehanički piling", "Parenje toplim ručnikom i masaža uz piling"],
-    "Frizure": ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi", "Punđa"],
-    "Ostale usluge": ["Relax zona"],
-    "Little Luxe Spa tretman": ["Mini", "Classic", "VIP"]
+    "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
+    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
+    "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
+    "Frizure": ["Ravnanje kose - 10-20€", "Uvijanje kose - 20-30€", "Hollywood valovi - 25-35€", "Elegantni repovi - 15-25€", "Punđa - 15€"],
+    "Ostale usluge": ["Relax zona - 25€"],
+    "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
 if stranica == "Rezerviraj Termin":
     st.title("📅 Adora Beauty Concept")
     
-    # Input polja
     ime = st.text_input("Ime i Prezime:")
     kontakt = st.text_input("Kontakt (Instagram/Broj):")
     
@@ -67,13 +67,13 @@ if stranica == "Rezerviraj Termin":
     
     if st.button("Rezerviraj"):
         if ime and kontakt:
-            puna_usluga = f"{kat} -> {usluga}"
-            spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
-            posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
+            puna_info = f"{kat} -> {usluga}"
+            spremi_termin(ime, kontakt, datum, vrijeme, puna_info)
+            posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_info)
             st.success("Termin uspješno rezerviran!")
-            st.rerun() # Osvježava formu nakon klika
+            st.rerun()
         else:
-            st.error("Molimo ispunite sva polja.")
+            st.error("Molimo ispunite ime i kontakt.")
 
 elif stranica == "Admin Panel":
     st.title("🔐 Admin Pristup")
