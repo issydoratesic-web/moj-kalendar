@@ -7,7 +7,7 @@ import requests
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
 
-# CSS za uljepšavanje gumba i izgleda
+# CSS za uljepšavanje
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 5px; background-color: #ff4b4b; color: white; font-weight: bold; }
@@ -98,7 +98,7 @@ if stranica == "📅 Rezervacija":
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.balloons()
                     st.success("Termin uspješno rezerviran!")
-                    st.rerun() # Osvježi stranicu nakon rezervacije
+                    st.rerun()
                 else: st.error("Molimo ispunite ime i kontakt.")
         else: st.warning("Nažalost, nema slobodnih termina za odabrani datum.")
 
@@ -106,8 +106,21 @@ elif stranica == "🔐 Admin Panel":
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         st.subheader("📥 Pristigli Termini")
-        st.dataframe(ucitaj_termine(), use_container_width=True)
-        if st.button("⚠️ Obriši sve termine"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.rerun()
+        df = ucitaj_termine()
+        st.dataframe(df, use_container_width=True)
+        
+        st.markdown("---")
+        st.subheader("🗑️ Brisanje termina")
+        if not df.empty:
+            index_za_brisanje = st.selectbox("Odaberite termin za brisanje (prema indeksu):", df.index.tolist())
+            if st.button("Obriši odabrani termin"):
+                df = df.drop(index_za_brisanje)
+                df.to_csv(DB_FILE, index=False)
+                st.success(f"Termin pod brojem {index_za_brisanje} je obrisan.")
+                st.rerun()
+        
+        if st.button("⚠️ Obriši SVE termine"):
+            if os.path.exists(DB_FILE): 
+                os.remove(DB_FILE)
+                st.rerun()
     elif lozinka: st.error("Pogrešna lozinka!")
