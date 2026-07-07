@@ -6,7 +6,6 @@ import requests
 
 def posalji_discord_obavijest(ime, kontakt, datum, vrijeme):
     try:
-        # Kod sada koristi novi Webhook koji si poslao
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
     except Exception as e:
         st.error("Nedostaje DISCORD_WEBHOOK u Streamlit Secrets!")
@@ -16,7 +15,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme):
         "content": "🔔 **Stigla je nova rezervacija termina!**",
         "embeds": [{
             "title": f"👤 Klijent: {ime}",
-            "color": 15418782, 
+            "color": 15418782,
             "fields": [
                 {"name": "📱 Kontakt (Instagram/Mobitel)", "value": kontakt, "inline": False},
                 {"name": "📅 Datum", "value": str(datum), "inline": True},
@@ -59,7 +58,6 @@ if stranica == "Rezerviraj Termin":
         kontakt = st.text_input("Vas Instagram username ili broj mobitela:")
         datum = st.date_input("Odaberite datum:", min_value=datetime.today().date())
         
-        # Ovdje je tvoj novi raspored do 20:00
         vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
         zauzeta_vremena = df_termini[df_termini["Datum"] == str(datum)]["Vrijeme"].values
         slobodna_vremena = [v for v in vremena if v not in zauzeta_vremena]
@@ -80,7 +78,15 @@ if stranica == "Rezerviraj Termin":
                 st.error("Molimo ispunite sva polja.")
 
 elif stranica == "Admin Panel":
-    st.title("📥 Pristigli Termini")
-    df_termini = ucitaj_termine()
-    if not df_termini.empty:
-        st.dataframe(df_termini, use_container_width=True)
+    st.title("🔐 Admin Pristup")
+    lozinka_input = st.text_input("Unesite lozinku za Admin Panel:", type="password")
+    
+    if lozinka_input == st.secrets["ADMIN_PASSWORD"]:
+        st.title("📥 Pristigli Termini")
+        df_termini = ucitaj_termine()
+        if not df_termini.empty:
+            st.dataframe(df_termini, use_container_width=True)
+        else:
+            st.write("Nema novih rezervacija.")
+    elif lozinka_input:
+        st.error("Pogrešna lozinka!")
