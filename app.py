@@ -42,41 +42,38 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
+usluge_mapa = {
+    "Šminkanje": ["Šminkanje", "Terensko šminkanje"],
+    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom", "Oblikovanje i bojanje obrva", "Brow lift", "Brow lift i bojanje"],
+    "Tretmani lica": ["Enzimski piling", "Blagi mehanički piling", "Parenje toplim ručnikom i masaža uz piling"],
+    "Frizure": ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi", "Punđa"],
+    "Ostale usluge": ["Relax zona"],
+    "Little Luxe Spa tretman": ["Mini", "Classic", "VIP"]
+}
+
 if stranica == "Rezerviraj Termin":
     st.title("📅 Adora Beauty Concept")
     
-    # Rječnik kategorija i usluga
-    usluge_mapa = {
-        "Šminkanje": ["Šminkanje", "Terensko šminkanje"],
-        "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom", "Oblikovanje i bojanje obrva", "Brow lift", "Brow lift i bojanje"],
-        "Tretmani lica": ["Enzimski piling", "Blagi mehanički piling", "Parenje toplim ručnikom i masaža uz piling"],
-        "Frizure": ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi", "Punđa"],
-        "Ostale usluge": ["Relax zona"],
-        "Little Luxe Spa tretman": ["Mini", "Classic", "VIP"]
-    }
-
-    with st.form("rezervacija_forma", clear_on_submit=True):
-        ime = st.text_input("Ime i Prezime:")
-        kontakt = st.text_input("Kontakt (Instagram/Broj):")
-        
-        # 1. Odabir glavne kategorije
-        kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
-        
-        # 2. Dinamički odabir usluge na temelju kategorije
-        usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
-        
-        datum = st.date_input("Datum:", min_value=datetime.today().date())
-        vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        vrijeme = st.selectbox("Vrijeme:", vremena)
-        
-        if st.form_submit_button("Rezerviraj"):
-            if ime and kontakt:
-                puna_usluga = f"{kat} -> {usluga}"
-                spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
-                posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
-                st.success("Termin uspješno rezerviran!")
-            else:
-                st.error("Molimo ispunite sva polja.")
+    # Input polja
+    ime = st.text_input("Ime i Prezime:")
+    kontakt = st.text_input("Kontakt (Instagram/Broj):")
+    
+    kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
+    usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
+    
+    datum = st.date_input("Datum:", min_value=datetime.today().date())
+    vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+    vrijeme = st.selectbox("Vrijeme:", vremena)
+    
+    if st.button("Rezerviraj"):
+        if ime and kontakt:
+            puna_usluga = f"{kat} -> {usluga}"
+            spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
+            posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
+            st.success("Termin uspješno rezerviran!")
+            st.rerun() # Osvježava formu nakon klika
+        else:
+            st.error("Molimo ispunite sva polja.")
 
 elif stranica == "Admin Panel":
     st.title("🔐 Admin Pristup")
