@@ -42,16 +42,14 @@ usluge_mapa = {
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-# --- UI ---
+# --- UI - GLAVNA NAVIGACIJA ---
 st.title("✨ Adora Beauty Concept")
-
-# Navigacija bez Admin Panela
 stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje"])
 
 if stranica == "📅 Rezervacija":
     st.info("""⚠️ **Napomena:**
-- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina.
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
+- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.
 - **Ako želite otkazati termin, otvorite izbornik (dvije strelice gore lijevo) i odaberite 'Otkazivanje'.**""")
     
     col1, col2 = st.columns(2)
@@ -74,18 +72,18 @@ if stranica == "📅 Rezervacija":
 
 elif stranica == "❌ Otkazivanje":
     st.subheader("Otkazivanje termina")
-    ime_klijenta = st.text_input("Unesite puno ime i prezime:")
+    ime_klijenta = st.text_input("Unesite ime:")
     if ime_klijenta:
         df = ucitaj_termine()
         termini = df[df['Ime'] == ime_klijenta]
         if not termini.empty:
             odabrani = st.selectbox("Odaberite termin:", termini['Datum'] + " u " + termini['Vrijeme'])
             if st.button("POTVRDI OTKAZIVANJE"):
-                st.error("Ne možete otkazati unutar 24 sata prije termina!")
+                st.warning("Pričekajte provjeru termina...") 
         else:
-            st.write("Nema pronađenih termina za ovo ime.")
+            st.write("Nema pronađenih termina.")
 
-# --- SKRIVENI ADMIN PANEL (Zasebna sekcija, van if/elif petlje) ---
+# --- SKRIVENI ADMIN PANEL (Ovo je sada potpuno odvojeno) ---
 st.markdown("---")
 if st.button("🔐 Pristup za administratora"):
     st.session_state.admin_mode = True
