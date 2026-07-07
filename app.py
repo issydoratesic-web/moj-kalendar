@@ -93,16 +93,13 @@ if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
         st.warning("Molimo unesite PUNO ime i prezime.")
     elif not kontakt:
         st.warning("Molimo unesite kontakt.")
-   # ... unutar tvog if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"): bloka:
-        else:
-            kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-            spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-            posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod, tip="rezervacija")
-            
-            # Ovdje mijenjamo tekst i vrijeme čekanja:
-            st.success("Vaš termin je uspješno rezerviran!")
-            time_module.sleep(5)  # Program pauzira 5 sekundi
-            st.rerun()
+    else:
+        kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+        spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
+        posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod, tip="rezervacija")
+        st.success("Vaš termin je uspješno rezerviran!")
+        time_module.sleep(5)
+        st.rerun()
 
 # --- PROVJERA I OTKAZIVANJE ---
 st.markdown("---")
@@ -141,8 +138,10 @@ with st.sidebar:
                 datum_vrijeme_b = dio[1].replace(")", "").split(" - ")
                 
                 # Pronađi podatke za obavijest
-                row_b = df_admin[(df_admin['Ime'].str.lower() == ime_b.lower()) & (df_admin['Datum'] == datum_vrijeme_b[0]) & (df_admin['Vrijeme'] == datum_vrijeme_b[1])].iloc[0]
-                posalji_discord_obavijest(row_b['Ime'], row_b['Kontakt'], row_b['Datum'], row_b['Vrijeme'], row_b['Usluga'], row_b['Kod'], tip="otkazivanje")
+                mask = (df_admin['Ime'].str.lower() == ime_b.lower()) & (df_admin['Datum'] == datum_vrijeme_b[0]) & (df_admin['Vrijeme'] == datum_vrijeme_b[1])
+                if not df_admin[mask].empty:
+                    row_b = df_admin[mask].iloc[0]
+                    posalji_discord_obavijest(row_b['Ime'], row_b['Kontakt'], row_b['Datum'], row_b['Vrijeme'], row_b['Usluga'], row_b['Kod'], tip="otkazivanje")
                 
                 obrisi_tocan_termin(ime_b, datum_vrijeme_b[0], datum_vrijeme_b[1])
                 st.success("Obrisano!")
