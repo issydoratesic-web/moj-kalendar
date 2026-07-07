@@ -51,13 +51,17 @@ kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None
 if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
     if usluga:
-        # IZBORNICI ZA DATUM
         st.write("---")
         st.subheader("Odaberite datum:")
         col1, col2, col3 = st.columns(3)
         with col1: dan = st.selectbox("Dan:", [str(i).zfill(2) for i in range(1, 32)])
         with col2: mjesec = st.selectbox("Mjesec:", [str(i).zfill(2) for i in range(1, 13)])
-        with col3: godina = st.selectbox("Godina:", [str(datetime.now().year), str(datetime.now().year + 1)])
+        
+        # Raspon od trenutne godine do 2035.
+        aktualna_godina = datetime.now().year
+        raspon_godina = [str(g) for g in range(aktualna_godina, 2036)]
+        
+        with col3: godina = st.selectbox("Godina:", raspon_godina)
         
         dat_str = f"{dan}/{mjesec}/{godina}"
         st.write(f"📅 Odabrani datum: **{dat_str}**")
