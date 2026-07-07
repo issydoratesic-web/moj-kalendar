@@ -99,26 +99,25 @@ if kat:
 # --- PROVJERA REZERVACIJE I OTKAZIVANJE ---
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje termina")
-ime_provjera = st.text_input("Unesite ime za provjeru rezervacije:")
-if ime_provjera:
-    df = ucitaj_termine()
-    moj_termin = df[df['Ime'] == ime_provjera]
-    if not moj_termin.empty:
-        st.info(f"Pronađeni termin: **{moj_termin.iloc[0]['Usluga']}** | Datum: {moj_termin.iloc[0]['Datum']} | Vrijeme: {moj_termin.iloc[0]['Vrijeme']}")
-        st.warning(f"🔑 Vaš kod za otkazivanje je: **{moj_termin.iloc[0]['Kod']}**")
-        
-        with st.expander("❌ Otkaži ovaj termin"):
-            kod_unos = st.text_input("Potvrdite kod za otkazivanje:")
-            if st.button("POTVRDI BRISANJE"):
-                if kod_unos == moj_termin.iloc[0]['Kod']:
-                    obrisani = obrisi_termin(kod_unos)
-                    st.success("Termin otkazan.")
-                    st.rerun()
-                else:
-                    st.error("Pogrešan kod!")
-    else:
-        st.write("Nema aktivne rezervacije za to ime.")
 
+# Korisnik sada unosi kod, što je najprecizniji način pretrage
+kod_za_provjeru = st.text_input("Unesite kod rezervacije za provjeru ili otkazivanje:")
+
+if kod_za_provjeru:
+    df = ucitaj_termine()
+    # Tražimo termin koji točno odgovara unesenom kodu (bez obzira na ime)
+    moj_termin = df[df['Kod'] == kod_za_provjeru.upper()]
+    
+    if not moj_termin.empty:
+        termin = moj_termin.iloc[0]
+        st.info(f"Pronađeni termin za: **{termin['Ime']}** | Usluga: **{termin['Usluga']}** | Datum: {termin['Datum']} | Vrijeme: {termin['Vrijeme']}")
+        
+        if st.button("❌ OTKAŽI OVAJ TERMIN"):
+            obrisani = obrisi_termin(kod_za_provjeru.upper())
+            st.success("Termin je uspješno otkazan.")
+            st.rerun()
+    else:
+        st.error("Nema rezervacije s tim kodom. Provjerite jeste li dobro upisali.")
 # --- ADMIN SIDEBAR ---
 with st.sidebar:
     st.header("🔐 Admin")
