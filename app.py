@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import os
 import requests
+import time
 
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
@@ -33,11 +34,11 @@ DB_FILE = "termini.csv"
 
 def ucitaj_termine():
     if os.path.exists(DB_FILE): return pd.read_csv(DB_FILE)
-    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Status"])
+    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
 
 def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
     df = ucitaj_termine()
-    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum, "Vrijeme": vrijeme, "Usluga": usluga, "Status": "Na cekanju"}])
+    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum, "Vrijeme": vrijeme, "Usluga": usluga}])
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
@@ -83,22 +84,26 @@ if stranica == "📅 Rezervacija":
         d_input = st.date_input("Datum:", min_value=datetime.today(), format="DD/MM/YYYY")
         datum_str = d_input.strftime("%d/%m/%Y")
         
-        df_termini = ucitaj_termine()
-        zauzeti = df_termini[df_termini['Datum'] == datum_str]['Vrijeme'].tolist()
-        vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        dostupna = [v for v in vremena if v not in zauzeti]
+        df = ucitaj_termine()
+        zauzeti = df[df['Datum'] == datum_str]['Vrijeme'].tolist()
+        sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+        dostupna = [v for v in sva_vremena if v not in zauzeti]
         
         if dostupna:
             vrijeme = st.selectbox("Odaberite slobodno vrijeme:", dostupna)
             if st.button("POTVRDI REZERVACIJU"):
-                if ime and kontakt:
+                zadnji = st.session_state.get('zadnji_klik', 0)
+                if time.time() - zadnji < 10:
+                    st.warning("Pričekajte 10 sekundi prije nove rezervacije!")
+                elif ime and kontakt:
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
+                    st.session_state['zadnji_klik'] = time.time()
                     st.balloons()
                     st.success("Termin uspješno rezerviran!")
                     st.rerun()
-                else: st.error("Molimo ispunite ime i kontakt.")
-        else: st.warning("Nažalost, nema slobodnih termina za odabrani datum.")
+                else: st.error("Ispunite ime i kontakt.")
+        else: st.warning("Nema slobodnih termina za odabrani datum.")
 
 elif stranica == "🔐 Admin Panel":
     lozinka = st.text_input("Lozinka:", type="password")
@@ -110,16 +115,13 @@ elif stranica == "🔐 Admin Panel":
         st.markdown("---")
         st.subheader("🗑️ Brisanje termina")
         if not df.empty:
-            # Selekt koji jasno prikazuje koji termin brišeš
-            index_za_brisanje = st.selectbox(
-                "Odaberite termin za brisanje:", 
-                options=df.index.tolist(),
-                format_func=lambda i: f"{df.loc[i, 'Datum']} u {df.loc[i, 'Vrijeme']} - {df.loc[i, 'Ime']}"
-            )
+            df['Display'] = df['Datum'] + " u " + df['Vrijeme'] + " - " + df['Ime']
+            odabir = st.selectbox("Odaberite termin za brisanje:", df['Display'].tolist())
             if st.button("Obriši odabrani termin"):
-                df = df.drop(index_za_brisanje)
-                df.to_csv(DB_FILE, index=False)
-                st.success("Termin je obrisan.")
+                idx = df[df['Display'] == odabir].index[0]
+                df = df.drop(idx)
+                df.drop(columns=['Display']).to_csv(DB_FILE, index=False)
+                st.success("Termin obrisan, vrijeme je sada slobodno.")
                 st.rerun()
         
         if st.button("⚠️ Obriši SVE termine"):
