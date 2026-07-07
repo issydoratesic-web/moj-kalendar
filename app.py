@@ -72,7 +72,10 @@ if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
     if usluga:
         col1, col2 = st.columns(2)
-        with col1: datum = st.date_input("Datum:", min_value=datetime.today())
+        with col1: 
+            datum = st.date_input("Datum:", min_value=datetime.today())
+            # OVO DODAJ:
+            st.caption(f"Odabrani datum: {datum.strftime('%d.%m.%Y.')}")
         with col2:
             df_svi = ucitaj_termine()
             dat_str = datum.strftime("%d/%m/%Y")
