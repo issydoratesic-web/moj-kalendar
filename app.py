@@ -88,7 +88,7 @@ ime_unos = st.text_input("Unesite PUNO ime i prezime za otkazivanje:")
 
 if ime_unos:
     df = ucitaj_termine()
-    # Tražimo točno ime (ignorišući velika/mala slova)
+    # Tražimo termin (ignorišući velika/mala slova)
     moj_termin = df[df['Ime'].str.lower() == ime_unos.strip().lower()]
     
     if not moj_termin.empty:
@@ -96,12 +96,15 @@ if ime_unos:
         st.info(f"Pronađen termin: {termin['Usluga']} | {termin['Datum']} u {termin['Vrijeme']}")
         
         if st.button("❌ POTVRDI OTKAZIVANJE TERMINA"):
-            # Ovdje koristimo funkciju za brisanje po kodu, ali ga dohvaćamo iz pronađenog retka
             obrisi_termin(termin['Kod'])
             st.success("Termin je uspješno otkazan.")
             st.rerun()
     else:
-        st.write("Nije pronađen termin za to ime. Provjerite jeste li unijeli puno ime i prezime.")with st.sidebar:
+        st.write("Nije pronađen termin za to ime. Provjerite jeste li unijeli puno ime i prezime.")
+
+# --- ADMIN SIDEBAR ---
+# Ovdje osiguravamo da je ovo novi blok koji započinje u novom retku
+with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
