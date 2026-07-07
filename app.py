@@ -42,7 +42,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
-# Struktura usluga
+# Osnovna mapa usluga
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
@@ -52,7 +52,7 @@ usluge_mapa = {
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-# Detaljne frizure s cijenama i uključenom punđom
+# Frizure podijeljene po dužini - OVDJE JE DODANA PUNĐA U DUGU KOSU
 frizure_po_duzini = {
     "Kratka kosa": ["Ravnanje kose - 10€", "Uvijanje kose - 20€", "Hollywood valovi - 25€", "Elegantni repovi - 15€", "Punđa - 15€"],
     "Duga kosa": ["Ravnanje kose - 20€", "Uvijanje kose - 30€", "Hollywood valovi - 35€", "Elegantni repovi - 25€", "Punđa - 15€"]
@@ -66,7 +66,7 @@ if stranica == "Rezerviraj Termin":
     
     kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
     
-    # Logika za frizure (podkategorije)
+    # Logika za frizure
     if kat == "Frizure":
         odabir_duzine = st.selectbox("Odaberite dužinu:", list(frizure_po_duzini.keys()))
         usluga = st.selectbox("Odaberite uslugu:", frizure_po_duzini[odabir_duzine])
