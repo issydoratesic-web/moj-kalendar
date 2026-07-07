@@ -41,7 +41,6 @@ Ugodan rad želi vam vaš sustav!"""
     except Exception as e:
         pass
 
-# --- KONFIGURACIJA I BAZA PODATAKA ---
 DB_FILE = "termini.csv"
 
 def ucitaj_termine():
@@ -49,19 +48,18 @@ def ucitaj_termine():
         return pd.read_csv(DB_FILE)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Status"])
 
-def spremi_termin(ime, kontakt, datum, vamo):
+def spremi_termin(ime, kontakt, datum, vrijeme):
     df = ucitaj_termine()
     novi_termin = pd.DataFrame([{
         "Ime": ime, 
         "Kontakt": kontakt, 
         "Datum": str(datum), 
-        "Vrijeme": vamo, 
+        "Vrijeme": vrijeme, 
         "Status": "Na čekanju"
     }])
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# --- GLAVNI PROGRAM ---
 st.set_page_config(page_title="Rezervacija Termina", layout="centered")
 
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel (Za tebe)"])
@@ -82,7 +80,7 @@ if stranica == "Rezerviraj Termin":
         slobodna_vremena = [v for v in vremena if v not in zauzeta_vremena]
         
         if slobodna_vremena:
-            vamo = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
+            vrijeme = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
             poslano = st.form_submit_button("Rezerviraj")
         else:
             st.warning("Nažalost, svi termini za ovaj dan su zauzeti. Odaberite drugi datum.")
@@ -90,9 +88,9 @@ if stranica == "Rezerviraj Termin":
             
         if poslano:
             if ime and kontakt:
-                spremi_termin(ime, kontakt, datum, vamo)
-                posalji_email_obavijest(ime, kontakt, datum, vamo)
-                st.success(f"Uspješno poslano! Rezervirali ste {datum} u {vamo}. Javit ću vam se uskoro!")
+                spremi_termin(ime, kontakt, datum, vrijeme)
+                posalji_email_obavijest(ime, kontakt, datum, vrijeme)
+                st.success(f"Uspješno poslano! Rezervirali ste {datum} u {vrijeme}. Javit ću vam se uskoro!")
             else:
                 st.error("Molimo ispunite sva polja.")
 
