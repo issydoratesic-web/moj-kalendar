@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import os
-import requests
 import time as time_module
 import random
 import string
@@ -15,24 +14,21 @@ def ucitaj_termine():
         return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
 
-def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
+def spremi_termin(ime, kontakt, dat_str, vrijeme, usluga, kod):
     df = ucitaj_termine()
-    datum_str = datum_obj.strftime('%d/%m/%Y') # Forsiramo DD/MM/YYYY za bazu
-    novi = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
+    novi = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
-def obrisi_termin(ime, datum_str, vrijeme):
+def obrisi_termin(ime, dat_str, vrijeme):
     df = ucitaj_termine()
-    df['Datum'] = df['Datum'].astype(str)
-    mask = (df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum_str) & (df['Vrijeme'] == vrijeme)
+    mask = (df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == dat_str) & (df['Vrijeme'] == vrijeme)
     df = df[~mask]
     df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-# VRACENE NAPOMENE
 st.info("""
 ⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
 Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
@@ -55,12 +51,18 @@ kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None
 if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
     if usluga:
-        datum = st.date_input("Datum:", min_value=datetime.today())
-        # Vizualna potvrda za tebe da znaš što ide u bazu
-        st.write(f"Odabrani datum za bazu: **{datum.strftime('%d/%m/%Y')}**")
+        # IZBORNICI ZA DATUM
+        st.write("---")
+        st.subheader("Odaberite datum:")
+        col1, col2, col3 = st.columns(3)
+        with col1: dan = st.selectbox("Dan:", [str(i).zfill(2) for i in range(1, 32)])
+        with col2: mjesec = st.selectbox("Mjesec:", [str(i).zfill(2) for i in range(1, 13)])
+        with col3: godina = st.selectbox("Godina:", [str(datetime.now().year), str(datetime.now().year + 1)])
+        
+        dat_str = f"{dan}/{mjesec}/{godina}"
+        st.write(f"📅 Odabrani datum: **{dat_str}**")
         
         df_svi = ucitaj_termine()
-        dat_str = datum.strftime("%d/%m/%Y")
         zauzeti = df_svi[df_svi['Datum'] == dat_str]['Vrijeme'].tolist()
         slobodni = [f"{h:02d}:00" for h in range(8, 21) if f"{h:02d}:00" not in zauzeti]
         vrijeme = st.selectbox("Vrijeme:", slobodni)
@@ -68,7 +70,7 @@ if kat:
         if st.button("POTVRDI REZERVACIJU"):
             if ime and kontakt:
                 kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                spremi_termin(ime, kontakt, datum, vrijeme, usluga, kod)
+                spremi_termin(ime, kontakt, dat_str, vrijeme, usluga, kod)
                 st.success(f"Uspješno! Kod: {kod}")
                 time_module.sleep(2)
                 st.rerun()
@@ -88,4 +90,5 @@ if ime_pretraga:
 with st.sidebar:
     st.header("🔐 Admin")
     if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
-        st.dataframe(ucitaj_termine())
+        df_admin = ucitaj_termine()
+        st.dataframe(df_admin)
