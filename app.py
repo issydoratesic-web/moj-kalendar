@@ -42,54 +42,55 @@ usluge_mapa = {
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-# --- UI - GLAVNA NAVIGACIJA ---
+# --- UI ---
 st.title("✨ Adora Beauty Concept")
-stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje"])
 
-if stranica == "📅 Rezervacija":
-    st.info("""⚠️ **Napomena:**
-- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.
-- **Ako želite otkazati termin, otvorite izbornik (dvije strelice gore lijevo) i odaberite 'Otkazivanje'.**""")
+# JEDNOSTAVNA NAVIGACIJA (Gumbi na vrhu za mobitele)
+col_res, col_otk = st.columns(2)
+if col_res.button("📅 Nova Rezervacija"): st.session_state.stranica = "Rezervacija"
+if col_otk.button("❌ Otkazivanje"): st.session_state.stranica = "Otkazivanje"
+
+if "stranica" not in st.session_state: st.session_state.stranica = "Rezervacija"
+
+if st.session_state.stranica == "Rezervacija":
+    st.info("""⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.""")
     
-    col1, col2 = st.columns(2)
-    with col1: ime = st.text_input("Ime i Prezime:")
-    with col2: kontakt = st.text_input("Kontakt (IG/Br):")
+    ime = st.text_input("Ime i Prezime:")
+    kontakt = st.text_input("Kontakt (IG/Br):")
     kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
     
     if kat:
         usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
         if usluga:
-            d_input = st.date_input("Datum:", min_value=datetime.today(), format="DD/MM/YYYY")
-            datum_str = d_input.strftime("%d/%m/%Y")
+            datum = st.date_input("Datum:", min_value=datetime.today())
             if st.button("POTVRDI REZERVACIJU"):
                 if ime and kontakt:
-                    spremi_termin(ime, kontakt, datum_str, "12:00", usluga)
-                    posalji_discord_obavijest(ime, kontakt, datum_str, "12:00", usluga)
+                    spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), "12:00", usluga)
+                    posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), "12:00", usluga)
                     st.success("✅ Termin uspješno rezerviran!")
-                    time.sleep(2)
+                    time.sleep(1)
                     st.rerun()
 
-elif stranica == "❌ Otkazivanje":
-    st.subheader("Otkazivanje termina")
-    ime_klijenta = st.text_input("Unesite ime:")
+elif st.session_state.stranica == "Otkazivanje":
+    st.subheader("❌ Otkazivanje termina")
+    ime_klijenta = st.text_input("Unesite ime i prezime za pretragu:")
     if ime_klijenta:
         df = ucitaj_termine()
         termini = df[df['Ime'] == ime_klijenta]
         if not termini.empty:
-            odabrani = st.selectbox("Odaberite termin:", termini['Datum'] + " u " + termini['Vrijeme'])
-            if st.button("POTVRDI OTKAZIVANJE"):
-                st.warning("Pričekajte provjeru termina...") 
+            st.write("Vaši termini:", termini)
+            st.warning("Za otkazivanje nas kontaktirajte izravno.")
         else:
-            st.write("Nema pronađenih termina.")
+            st.write("Nema pronađenih termina za to ime.")
 
-# --- SKRIVENI ADMIN PANEL (Ovo je sada potpuno odvojeno) ---
+# --- SKRIVENI ADMIN PANEL ---
 st.markdown("---")
-if st.button("🔐 Pristup za administratora"):
+if st.button("🔐"):
     st.session_state.admin_mode = True
 
 if st.session_state.get("admin_mode", False):
-    lozinka = st.text_input("Unesite lozinku:", type="password")
+    lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         st.subheader("Admin Panel")
         st.dataframe(ucitaj_termine())
