@@ -42,12 +42,12 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
-# Definiramo mape s cijenama
+# Ovdje su sada svi nazivi usluga ažurirani s cijenama
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
     "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
-    "Frizure": ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi", "Punđa - 15€"],
+    "Frizure": ["Ravnanje kose (10-20€)", "Uvijanje kose (20-30€)", "Hollywood valovi (25-35€)", "Elegantni repovi (15-25€)", "Punđa - 15€"],
     "Ostale usluge": ["Relax zona - 25€"],
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
@@ -61,16 +61,16 @@ if stranica == "Rezerviraj Termin":
     kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
     usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
     
-    # Logika za frizure: ako je odabrana frizura, pitamo za dužinu
+    # Logika za frizure i dužinu
     prikaz_usluge = usluga
-    if kat == "Frizure" and usluga in ["Ravnanje kose", "Uvijanje kose", "Hollywood valovi", "Elegantni repovi"]:
+    if kat == "Frizure" and usluga in ["Ravnanje kose (10-20€)", "Uvijanje kose (20-30€)", "Hollywood valovi (25-35€)", "Elegantni repovi (15-25€)"]:
         duzina = st.radio("Odaberite dužinu kose:", ["Kratka kosa", "Duga kosa"])
-        # Definicija cijena po dužini
+        # Precizne cijene prema odabiru
         cijene = {
-            "Ravnanje kose": {"Kratka kosa": "10€", "Duga kosa": "20€"},
-            "Uvijanje kose": {"Kratka kosa": "20€", "Duga kosa": "30€"},
-            "Hollywood valovi": {"Kratka kosa": "25€", "Duga kosa": "35€"},
-            "Elegantni repovi": {"Kratka kosa": "15€", "Duga kosa": "25€"}
+            "Ravnanje kose (10-20€)": {"Kratka kosa": "10€", "Duga kosa": "20€"},
+            "Uvijanje kose (20-30€)": {"Kratka kosa": "20€", "Duga kosa": "30€"},
+            "Hollywood valovi (25-35€)": {"Kratka kosa": "25€", "Duga kosa": "35€"},
+            "Elegantni repovi (15-25€)": {"Kratka kosa": "15€", "Duga kosa": "25€"}
         }
         odabrana_cijena = cijene[usluga][duzina]
         prikaz_usluge = f"{usluga} ({duzina} - {odabrana_cijena})"
