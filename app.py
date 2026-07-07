@@ -98,10 +98,21 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
         with col2: 
-            sati = [f"{h:02d}:00" for h in range(8, 21)]
-            odabrano_vrijeme = st.selectbox("Odaberite vrijeme:", sati)
+            # LOGIKA FILTRIRANJA:
+            df_svi = ucitaj_termine()
+            termini_na_taj_datum = df_svi[df_svi['Datum'] == datum.strftime("%d/%m/%Y")]
+            zauzeti_sati = termini_na_taj_datum['Vrijeme'].tolist()
+            
+            svi_sati = [f"{h:02d}:00" for h in range(8, 21)]
+            slobodni_sati = [sat for sat in svi_sati if sat not in zauzeti_sati]
+            
+            if slobodni_sati:
+                odabrano_vrijeme = st.selectbox("Odaberite slobodno vrijeme:", slobodni_sati)
+            else:
+                st.error("Nažalost, za ovaj datum nema više slobodnih termina.")
+                odabrano_vrijeme = None
         
-        if st.button("POTVRDI REZERVACIJU"):
+        if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
             if not ime or not kontakt:
                 st.warning("Molimo unesite ime i kontakt.")
             else:
