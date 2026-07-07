@@ -103,7 +103,7 @@ if stranica == "📅 Rezervacija":
 
 elif stranica == "❌ Otkazivanje":
     st.subheader("Otkazivanje termina")
-    ime_klijenta = st.text_input("Unesite ime:")
+    ime_klijenta = st.text_input("Unesite puno ime i prezime:")
     if ime_klijenta:
         df = ucitaj_termine()
         termini = df[df['Ime'] == ime_klijenta]
@@ -112,9 +112,7 @@ elif stranica == "❌ Otkazivanje":
             if st.button("POTVRDI OTKAZIVANJE"):
                 d_str = odabrani.split(" u ")[0]
                 red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
-                # Šaljemo pune podatke iz retka
                 posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
-                # Brisanje retka
                 df = df.drop(red.name)
                 df.to_csv(DB_FILE, index=False)
                 st.write("❌ Termin uspješno otkazan i obavijest poslana.")
