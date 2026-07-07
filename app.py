@@ -63,68 +63,45 @@ usluge_mapa = {
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
+# ... (nakon st.subheader("Nova rezervacija"))
 ime = st.text_input("Ime i Prezime:")
-kontakt = st.text_input("Kontakt (IG/Br):")
-kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
-if kat:
-    usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
-    if usluga:
-        col1, col2 = st.columns(2)
-        with col1: datum = st.date_input("Datum:", min_value=datetime.today())
-        with col2: 
-            df_svi = ucitaj_termine()
-            termini_na_taj_datum = df_svi[df_svi['Datum'] == datum.strftime("%d/%m/%Y")]
-            zauzeti_sati = termini_na_taj_datum['Vrijeme'].tolist()
-            svi_sati = [f"{h:02d}:00" for h in range(8, 21)]
-            slobodni_sati = [sat for sat in svi_sati if sat not in zauzeti_sati]
-            
-            if slobodni_sati:
-                odabrano_vrijeme = st.selectbox("Odaberite slobodno vrijeme:", slobodni_sati)
-            else:
-                st.error("Nažalost, za ovaj datum nema više slobodnih termina.")
-                odabrano_vrijeme = None
-        
-        if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
-            if not ime or not kontakt:
-                st.warning("Molimo unesite ime i kontakt.")
-            else:
-                kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-                posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-                st.success(f"✅ Uspješno! Vaš kod je: **{kod}**. Možete ga vidjeti u sekciji ispod.")
-                time_module.sleep(3)
-                st.rerun()
-
+# ... (u dijelu gdje ide if odabrano_vrijeme and st.button(...))
+if odabrano_vrijeme and st.button("POTVRDI REZERVACIJU"):
+    # Provjera: mora sadržavati razmak (dakle barem ime i prezime)
+    if not ime or " " not in ime.strip():
+        st.warning("Molimo unesite puno ime i prezime (npr. Ana Anić).")
+    elif not kontakt:
+        st.warning("Molimo unesite kontakt.")
+    else:
+        kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+        spremi_termin(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
+        posalji_discord_obavijest(ime.strip(), kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
+        st.success(f"✅ Uspješno! Vaš kod je: **{kod}**.")
+        time_module.sleep(3)
+        st.rerun()
 # --- PROVJERA REZERVACIJE I OTKAZIVANJE ---
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje termina")
 
-ime_provjera = st.text_input("Unesite ime za provjeru rezervacije:")
+ime_unos = st.text_input("Unesite PUNO ime i prezime za otkazivanje:")
 
-if ime_provjera:
+if ime_unos:
     df = ucitaj_termine()
-    # .str.contains() pronalazi sve termine gdje ime sadrži upisani tekst (case=False ignorira velika/mala slova)
-    # na=False osigurava da ne bude greške ako u bazi ima praznih polja
-    rezultati = df[df['Ime'].str.contains(ime_provjera, case=False, na=False)]
+    # Tražimo točno ime (ignorišući velika/mala slova)
+    moj_termin = df[df['Ime'].str.lower() == ime_unos.strip().lower()]
     
-    if not rezultati.empty:
-        for index, row in rezultati.iterrows():
-            st.info(f"Pronađen termin za: **{row['Ime']}** | Usluga: {row['Usluga']} | Datum: {row['Datum']} | Vrijeme: {row['Vrijeme']}")
-            st.warning(f"🔑 Kod za ovaj termin je: **{row['Kod']}**")
-            
-            with st.expander(f"❌ Otkaži termin za {row['Ime']}"):
-                kod_unos = st.text_input(f"Potvrdite kod za otkazivanje ({row['Ime']}):", key=f"kod_{row['Kod']}")
-                if st.button("POTVRDI BRISANJE", key=f"btn_{row['Kod']}"):
-                    if kod_unos.strip().upper() == row['Kod']:
-                        obrisi_termin(row['Kod'])
-                        st.success("Termin je uspješno otkazan.")
-                        st.rerun()
-                    else:
-                        st.error("Pogrešan kod!")
+    if not moj_termin.empty:
+        termin = moj_termin.iloc[0]
+        st.info(f"Pronađen termin: {termin['Usluga']} | {termin['Datum']} u {termin['Vrijeme']}")
+        
+        if st.button("❌ POTVRDI OTKAZIVANJE TERMINA"):
+            # Ovdje koristimo funkciju za brisanje po kodu, ali ga dohvaćamo iz pronađenog retka
+            obrisi_termin(termin['Kod'])
+            st.success("Termin je uspješno otkazan.")
+            st.rerun()
     else:
-        st.write("Nema rezervacije s tim imenom. Provjerite jeste li dobro upisali.")# --- ADMIN SIDEBAR ---
-with st.sidebar:
+        st.write("Nije pronađen termin za to ime. Provjerite jeste li unijeli puno ime i prezime.")with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
