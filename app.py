@@ -59,7 +59,7 @@ if stranica == "Rezerviraj Termin":
         kontakt = st.text_input("Vas Instagram username ili broj mobitela:")
         datum = st.date_input("Odaberite datum:", min_value=datetime.today().date())
         
-        vremena = [vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]]
+        vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
         zauzeta_vremena = df_termini[df_termini["Datum"] == str(datum)]["Vrijeme"].values
         slobodna_vremena = [v for v in vremena if v not in zauzeta_vremena]
         
