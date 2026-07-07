@@ -88,7 +88,7 @@ if stranica == "📅 Rezervacija":
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga, tip="rezervacija")
                     st.session_state['zadnji_klik'] = time.time()
-                    st.write("✅ Termin uspješno rezerviran!")
+                    st.success("Termin uspješno rezerviran!")
                     time.sleep(2)
                     st.rerun()
 
@@ -106,13 +106,11 @@ elif stranica == "❌ Otkazivanje":
                 if d_termin - datetime.now() < timedelta(days=2):
                     st.error("Ne možete otkazati unutar 48 sati!")
                 else:
-                    # Tražimo redak i šaljemo obavijest
                     red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
                     posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
-                    # Brišemo
                     df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].index)
                     df.to_csv(DB_FILE, index=False)
-                    st.write("❌ Termin otkazan, obavijest poslana.")
+                    st.success("Termin otkazan, obavijest poslana.")
                     time.sleep(2)
                     st.rerun()
 
