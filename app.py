@@ -6,12 +6,26 @@ import requests
 import time
 
 # --- KONFIGURACIJA ---
-st.set_page_config(page_title="Adora Studio", page_icon="✂️", layout="centered")
+st.set_page_config(page_title="Adora Studio", page_icon="✨", layout="centered")
 
-# CSS za uljepšavanje gumba
+# --- CSS ZA TOPLIJI IZGLED ---
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 5px; background-color: #ff4b4b; color: white; font-weight: bold; }
+    .stApp { background-color: #fdfaf6; }
+    .stButton>button { 
+        width: 100%; 
+        border-radius: 20px; 
+        background-color: #d4a373; 
+        color: white; 
+        font-weight: bold; 
+        border: none;
+    }
+    .stButton>button:hover { background-color: #bc8a5f; }
+    .stTextInput>div>div>input, .stSelectbox>div>div>div {
+        border-radius: 10px;
+        border: 1px solid #d4a373;
+    }
+    h1, h2, h3 { color: #6f5c49; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -21,7 +35,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
         data = {
             "content": "🔔 **Nova rezervacija!**",
-            "embeds": [{"title": f"👤 Klijent: {ime}", "color": 15418782, "fields": [
+            "embeds": [{"title": f"👤 Klijent: {ime}", "color": 13935987, "fields": [
                 {"name": "✂️ Usluga", "value": usluga, "inline": False},
                 {"name": "📱 Kontakt", "value": kontakt, "inline": False},
                 {"name": "📅 Datum", "value": datum, "inline": True},
@@ -94,14 +108,12 @@ if stranica == "📅 Rezervacija":
             if st.button("POTVRDI REZERVACIJU"):
                 zadnji = st.session_state.get('zadnji_klik', 0)
                 if time.time() - zadnji < 10:
-                    st.warning("Molimo pričekajte 10 sekundi prije nove rezervacije!")
+                    st.warning("Pričekajte 10 sekundi prije nove rezervacije!")
                 elif ime and kontakt:
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.session_state['zadnji_klik'] = time.time()
-                    st.balloons()
                     
-                    # POTVRDA KOJA TRAJE 4 SEKUNDE
                     placeholder = st.empty()
                     placeholder.success("Termin uspješno rezerviran!")
                     time.sleep(4)
