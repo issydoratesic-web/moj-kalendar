@@ -49,7 +49,7 @@ def obrisi_termin(kod):
 st.title("✨ Adora Beauty Concept")
 
 st.info("""⚠️ **Napomena:**
-- **VAŽNO:** Prilikom rezervacije dobit ćete **Kod za otkazivanje**. Molimo da ga zapišete ili spremite jer vam je potreban za kasnije otkazivanje termina.
+- Rezervaciju možete provjeriti ili otkazati putem koda dobivenog pri rezervaciji.
 - Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.""")
 
 st.subheader("Nova rezervacija")
@@ -92,23 +92,32 @@ if kat:
                 kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
                 spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
                 posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga, kod)
-                st.success(f"✅ Uspješno! Vaš kod za otkazivanje je: **{kod}**. MOLIMO ZAPIŠITE OVAJ KOD!")
-                time_module.sleep(5)
+                st.success(f"✅ Uspješno! Vaš kod je: **{kod}**. Možete ga vidjeti u sekciji ispod.")
+                time_module.sleep(3)
                 st.rerun()
 
-# --- OTKAZIVANJE (NA DNU) ---
+# --- PROVJERA REZERVACIJE I OTKAZIVANJE ---
 st.markdown("---")
-with st.expander("❌ Želim otkazati termin (potreban kod)"):
-    kod_input = st.text_input("Unesite Vaš kod za otkazivanje:")
-    if st.button("OTKAŽI TERMIN"):
-        obrisani = obrisi_termin(kod_input)
-        if obrisani:
-            st.success("Termin je otkazan.")
-            posalji_discord_obavijest(obrisani['Ime'], obrisani['Kontakt'], obrisani['Datum'], obrisani['Vrijeme'], obrisani['Usluga'], kod_input, tip="otkazivanje")
-            time_module.sleep(1)
-            st.rerun()
-        else:
-            st.error("Kod nije pronađen. Provjerite jeste li ga točno unijeli.")
+st.subheader("🔎 Provjera i otkazivanje termina")
+ime_provjera = st.text_input("Unesite ime za provjeru rezervacije:")
+if ime_provjera:
+    df = ucitaj_termine()
+    moj_termin = df[df['Ime'] == ime_provjera]
+    if not moj_termin.empty:
+        st.info(f"Pronađeni termin: **{moj_termin.iloc[0]['Usluga']}** | Datum: {moj_termin.iloc[0]['Datum']} | Vrijeme: {moj_termin.iloc[0]['Vrijeme']}")
+        st.warning(f"🔑 Vaš kod za otkazivanje je: **{moj_termin.iloc[0]['Kod']}**")
+        
+        with st.expander("❌ Otkaži ovaj termin"):
+            kod_unos = st.text_input("Potvrdite kod za otkazivanje:")
+            if st.button("POTVRDI BRISANJE"):
+                if kod_unos == moj_termin.iloc[0]['Kod']:
+                    obrisani = obrisi_termin(kod_unos)
+                    st.success("Termin otkazan.")
+                    st.rerun()
+                else:
+                    st.error("Pogrešan kod!")
+    else:
+        st.write("Nema aktivne rezervacije za to ime.")
 
 # --- ADMIN SIDEBAR ---
 with st.sidebar:
