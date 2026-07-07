@@ -85,11 +85,16 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
         with col2: 
-            # Ograničenje vremena od 08:00 do 20:00
-            vrijeme = st.time_input("Vrijeme:", value=dt_time(8, 0), min_value=dt_time(8, 0), max_value=dt_time(20, 0))
+            # Koristimo step od 30 min (1800 sekundi)
+            vrijeme = st.time_input("Vrijeme:", value=dt_time(8, 0), step=1800)
         
         if st.button("POTVRDI REZERVACIJU"):
-            if ime and kontakt:
+            # Ručna provjera radnog vremena
+            if vrijeme < dt_time(8, 0) or vrijeme > dt_time(20, 0):
+                st.error("Radno vrijeme je od 08:00 do 20:00!")
+            elif not ime or not kontakt:
+                st.warning("Molimo unesite ime i kontakt.")
+            else:
                 vrijeme_str = vrijeme.strftime("%H:%M")
                 spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), vrijeme_str, usluga)
                 posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), vrijeme_str, usluga)
@@ -97,7 +102,7 @@ if kat:
                 time_module.sleep(2)
                 st.rerun()
 
-# --- ADMIN (Skriveno na dnu) ---
+# --- ADMIN ---
 st.markdown("---")
 if st.button("🔐"):
     st.session_state.admin_mode = True
