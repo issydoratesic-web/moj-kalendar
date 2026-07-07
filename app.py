@@ -34,9 +34,14 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 
 def obrisi_termin(ime_klijenta):
     df = ucitaj_termine()
-    novi_df = df[df['Ime'] != ime_klijenta]
-    novi_df.to_csv("termini.csv", index=False)
-    return True
+    termin = df[df['Ime'] == ime_klijenta]
+    
+    if not termin.empty:
+        podaci = termin.iloc[0].to_dict()
+        novi_df = df[df['Ime'] != ime_klijenta]
+        novi_df.to_csv("termini.csv", index=False)
+        return podaci
+    return None
 
 # --- DIALOG ZA OTKAZIVANJE ---
 @st.dialog("❌ Otkazivanje termina")
@@ -55,9 +60,18 @@ def prozor_otkazivanje():
     
     if "klijent_za_brisanje" in st.session_state:
         if st.button("POTVRDI OTKAZIVANJE"):
-            if obrisi_termin(st.session_state.klijent_za_brisanje):
+            obrisani_termin = obrisi_termin(st.session_state.klijent_za_brisanje)
+            
+            if obrisani_termin:
                 st.success("Termin je uspješno otkazan!")
-                posalji_discord_obavijest(st.session_state.klijent_za_brisanje, "-", "-", "-", "-", tip="otkazivanje")
+                posalji_discord_obavijest(
+                    obrisani_termin['Ime'], 
+                    obrisani_termin['Kontakt'], 
+                    obrisani_termin['Datum'], 
+                    obrisani_termin['Vrijeme'], 
+                    obrisani_termin['Usluga'], 
+                    tip="otkazivanje"
+                )
                 del st.session_state.klijent_za_brisanje
                 time_module.sleep(1)
                 st.rerun()
@@ -98,7 +112,7 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
         with col2: 
-            # LOGIKA FILTRIRANJA:
+            # Filtriranje zauzetih termina
             df_svi = ucitaj_termine()
             termini_na_taj_datum = df_svi[df_svi['Datum'] == datum.strftime("%d/%m/%Y")]
             zauzeti_sati = termini_na_taj_datum['Vrijeme'].tolist()
