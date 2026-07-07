@@ -60,10 +60,8 @@ st.title("✨ Adora Beauty Concept")
 stranica = st.sidebar.radio("Navigacija", ["📅 Rezervacija", "❌ Otkazivanje", "🔐 Admin Panel"])
 
 if stranica == "📅 Rezervacija":
-    # Vraćena detaljna napomena
-    st.info("⚠️ **Napomena:** \n"
-            "- Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge. \n"
-            "- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50% cijene) na IBAN: **HR03 2402 0061 1406 1395 3**")
+    st.info("""⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge. 
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3""")
     
     col1, col2 = st.columns(2)
     with col1: ime = st.text_input("Ime i Prezime:")
