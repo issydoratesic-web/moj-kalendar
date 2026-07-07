@@ -8,7 +8,7 @@ import time
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Studio", page_icon="✨", layout="centered")
 
-# --- NAPOMENA: CSS JE UKLONJEN KAKO BI SE VRATIO IZVORNI DARK MODE ---
+# --- CSS JE OVDJE POTPUNO UKLONJEN KAKO BI SE VRATIO IZVORNI DARK MODE ---
 
 # --- FUNKCIJE ---
 def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
@@ -95,10 +95,8 @@ if stranica == "📅 Rezervacija":
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.session_state['zadnji_klik'] = time.time()
                     
-                    placeholder = st.empty()
-                    placeholder.success("Termin uspješno rezerviran!")
-                    time.sleep(4)
-                    placeholder.empty()
+                    st.success("Termin uspješno rezerviran!")
+                    time.sleep(2)
                     st.rerun()
                 else: st.error("Ispunite ime i kontakt.")
         else: st.warning("Nema slobodnih termina za odabrani datum.")
@@ -116,4 +114,14 @@ elif stranica == "🔐 Admin Panel":
             df['Display'] = df['Datum'] + " u " + df['Vrijeme'] + " - " + df['Ime']
             odabir = st.selectbox("Odaberite termin za brisanje:", df['Display'].tolist())
             if st.button("Obriši odabrani termin"):
-                idx = df[df['Display'] == odab
+                idx = df[df['Display'] == odabir].index[0]
+                df = df.drop(idx)
+                df.drop(columns=['Display']).to_csv(DB_FILE, index=False)
+                st.success("Termin obrisan, vrijeme je sada slobodno.")
+                time.sleep(2)
+                st.rerun()
+        
+        if st.button("⚠️ Obriši SVE termine"):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.rerun()
+    elif lozinka: st.error("Pogrešna lozinka!")
