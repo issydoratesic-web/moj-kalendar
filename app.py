@@ -42,16 +42,20 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
-# Organizacija s dvije kategorije za kosu
+# Struktura usluga
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
     "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
-    "Kratka kosa": ["Ravnanje kose - 10€", "Uvijanje kose - 20€", "Hollywood valovi - 25€", "Elegantni repovi - 15€"],
-    "Duga kosa": ["Ravnanje kose - 20€", "Uvijanje kose - 30€", "Hollywood valovi - 35€", "Elegantni repovi - 25€"],
-    "Punđa": ["Punđa - 15€"],
+    "Frizure": ["Kratka kosa", "Duga kosa", "Punđa - 15€"],
     "Ostale usluge": ["Relax zona - 25€"],
     "Little Luxe Spa tretman": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
+}
+
+# Detaljne frizure
+frizure_po_duzini = {
+    "Kratka kosa": ["Ravnanje kose - 10€", "Uvijanje kose - 20€", "Hollywood valovi - 25€", "Elegantni repovi - 15€"],
+    "Duga kosa": ["Ravnanje kose - 20€", "Uvijanje kose - 30€", "Hollywood valovi - 35€", "Elegantni repovi - 25€"]
 }
 
 if stranica == "Rezerviraj Termin":
@@ -61,7 +65,15 @@ if stranica == "Rezerviraj Termin":
     kontakt = st.text_input("Kontakt (Instagram/Broj):")
     
     kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
-    usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
+    
+    # Logika za frizure (podkategorije)
+    if kat == "Frizure":
+        odabir_duzine = st.selectbox("Odaberite dužinu:", list(frizure_po_duzini.keys()))
+        usluga = st.selectbox("Odaberite uslugu:", frizure_po_duzini[odabir_duzine])
+        puna_usluga = f"{kat} -> {odabir_duzine} -> {usluga}"
+    else:
+        usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
+        puna_usluga = f"{kat} -> {usluga}"
     
     datum = st.date_input("Datum:", min_value=datetime.today().date())
     vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
@@ -69,9 +81,8 @@ if stranica == "Rezerviraj Termin":
     
     if st.button("Rezerviraj"):
         if ime and kontakt:
-            zapis = f"{kat} -> {usluga}"
-            spremi_termin(ime, kontakt, datum, vrijeme, zapis)
-            posalji_discord_obavijest(ime, kontakt, datum, vrijeme, zapis)
+            spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
+            posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
             st.success("Termin uspješno rezerviran!")
             st.rerun()
         else:
