@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 
 # --- POSTAVKE ZA EMAIL OBAVIJESTI ---
 GMAIL_USER = "adorabeatyconcept.official0@gmail.com"
-GMAIL_PASSWORD = "tioxyxkgrbflbnic"
+GMAIL_PASSWORD = "deyyhofxxqnwotat"
 
 def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
     naslov = f"Nova rezervacija: {ime}"
@@ -40,7 +40,6 @@ def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
         server.sendmail(GMAIL_USER, GMAIL_USER, text)
         server.quit()
     except Exception as e:
-        # Ako mail ne ode, ovdje ispisujemo gresku u logovima za provjeru
         print(f"Greska pri slanju maila: {e}")
 
 # --- KONFIGURACIJA I BAZA PODATAKA ---
