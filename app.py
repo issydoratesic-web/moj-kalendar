@@ -6,11 +6,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# --- POSTAVKE ZA EMAIL OBAVIJESTI ---
-GMAIL_USER = "upisi_svoj_gmail_ovdje@gmail.com"
-GMAIL_PASSWORD = "upisi_svojih_16_slova_ovdje"
+GMAIL_USER = "adorabeatyconcept.official0@gmail.com"
+GMAIL_PASSWORD = "tiox yxkg rbfl bnic"
 
-def posalji_email_obavijest(ime, kontakt, datum, vamo):
+def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
     naslov = f"⚠️ Nova rezervacija: {ime}"
     tijelo_maila = f"""Pozdrav,
     
@@ -21,7 +20,7 @@ Detalji:
 👤 Ime i prezime: {ime}
 📱 Instagram / Kontakt: {kontakt}
 📅 Datum: {datum}
-⏰ Vrijeme: {vamo}
+⏰ Vrijeme: {vrijeme}
 -------------------------------------------
     
 Ugodan rad želi vam vaš sustav!"""
