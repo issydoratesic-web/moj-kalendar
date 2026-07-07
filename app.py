@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, time as dt_time
+from datetime import datetime
 import os
 import requests
 import time as time_module
@@ -53,19 +53,16 @@ def prozor_otkazivanje():
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-# Napomena
 st.info("""⚠️ **Napomena:**
 - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
 - Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.""")
 
-# Gumb za otkazivanje
 if st.button("❌ Želim otkazati termin"):
     prozor_otkazivanje()
 
 st.markdown("---")
 st.subheader("Nova rezervacija")
 
-# Podaci
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
@@ -85,19 +82,16 @@ if kat:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
         with col2: 
-            # Koristimo step od 30 min (1800 sekundi)
-            vrijeme = st.time_input("Vrijeme:", value=dt_time(8, 0), step=1800)
+            # Generiranje liste sati od 08:00 do 20:00 (razmak od sat vremena)
+            sati = [f"{h:02d}:00" for h in range(8, 21)]
+            odabrano_vrijeme = st.selectbox("Odaberite vrijeme:", sati)
         
         if st.button("POTVRDI REZERVACIJU"):
-            # Ručna provjera radnog vremena
-            if vrijeme < dt_time(8, 0) or vrijeme > dt_time(20, 0):
-                st.error("Radno vrijeme je od 08:00 do 20:00!")
-            elif not ime or not kontakt:
+            if not ime or not kontakt:
                 st.warning("Molimo unesite ime i kontakt.")
             else:
-                vrijeme_str = vrijeme.strftime("%H:%M")
-                spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), vrijeme_str, usluga)
-                posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), vrijeme_str, usluga)
+                spremi_termin(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga)
+                posalji_discord_obavijest(ime, kontakt, datum.strftime("%d/%m/%Y"), odabrano_vrijeme, usluga)
                 st.success("✅ Termin uspješno rezerviran!")
                 time_module.sleep(2)
                 st.rerun()
