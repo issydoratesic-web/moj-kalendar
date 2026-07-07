@@ -59,7 +59,10 @@ if stranica == "Rezerviraj Termin":
         ime = st.text_input("Ime i Prezime:")
         kontakt = st.text_input("Kontakt (Instagram/Broj):")
         
+        # 1. Odabir glavne kategorije
         kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()))
+        
+        # 2. Dinamički odabir usluge na temelju kategorije
         usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
         
         datum = st.date_input("Datum:", min_value=datetime.today().date())
@@ -68,7 +71,7 @@ if stranica == "Rezerviraj Termin":
         
         if st.form_submit_button("Rezerviraj"):
             if ime and kontakt:
-                puna_usluga = f"{kat} - {usluga}"
+                puna_usluga = f"{kat} -> {usluga}"
                 spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
                 posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
                 st.success("Termin uspješno rezerviran!")
