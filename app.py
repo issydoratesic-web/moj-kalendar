@@ -39,7 +39,6 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga, kod):
 
 def obrisi_tocan_termin(ime, datum, vrijeme):
     df = ucitaj_termine()
-    # Brišemo redak koji točno odgovara unesenim podacima
     novi_df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & 
                     (df['Datum'] == datum) & 
                     (df['Vrijeme'] == vrijeme))]
@@ -47,6 +46,12 @@ def obrisi_tocan_termin(ime, datum, vrijeme):
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
+
+# Prikaz napomene
+st.info("""
+⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
+- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
+""")
 
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
@@ -110,7 +115,7 @@ if ime_otkazivanje:
             if st.button(f"❌ OTKAŽI {row['Vrijeme']}", key=f"btn_{index}"):
                 posalji_discord_obavijest(row['Ime'], row['Kontakt'], row['Datum'], row['Vrijeme'], row['Usluga'], row['Kod'], tip="otkazivanje")
                 obrisi_tocan_termin(row['Ime'], row['Datum'], row['Vrijeme'])
-                st.success("Termin je otkazan i obavijest je poslana.")
+                st.success("Termin je otkazan.")
                 st.rerun()
     else:
         st.write("Nema termina za to ime.")
@@ -119,27 +124,23 @@ if ime_otkazivanje:
 with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
-    
-    # OVDJE JE KLJUČNO DA JE OVO ISPRAVNO ZATVORENO
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         df_admin = ucitaj_termine()
         st.subheader("Popis svih termina")
         st.dataframe(df_admin)
-        
         st.subheader("Brisanje (Admin)")
         if not df_admin.empty:
             opcije = df_admin.apply(lambda x: f"{x['Ime']} ({x['Datum']} - {x['Vrijeme']})", axis=1).tolist()
-            odabrani = st.selectbox("Odaberite termin za brisanje:", opcije)
-            
+            odabrani = st.selectbox("Odaberite termin:", opcije)
             if st.button("OBRIŠI ODABRANI"):
                 dio = odabrani.split(" (")
                 ime_b = dio[0]
                 datum_vrijeme_b = dio[1].replace(")", "").split(" - ")
                 
-                # Poziv funkcije za brisanje
+                # Pronađi podatke za obavijest
+                row_b = df_admin[(df_admin['Ime'].str.lower() == ime_b.lower()) & (df_admin['Datum'] == datum_vrijeme_b[0]) & (df_admin['Vrijeme'] == datum_vrijeme_b[1])].iloc[0]
+                posalji_discord_obavijest(row_b['Ime'], row_b['Kontakt'], row_b['Datum'], row_b['Vrijeme'], row_b['Usluga'], row_b['Kod'], tip="otkazivanje")
+                
                 obrisi_tocan_termin(ime_b, datum_vrijeme_b[0], datum_vrijeme_b[1])
-                st.success(f"Termin za {ime_b} je obrisan!")
+                st.success("Obrisano!")
                 st.rerun()
-        else:
-            st.write("Nema termina za brisanje.")
-    # Ako lozinka nije točna, ništa se ne događa
