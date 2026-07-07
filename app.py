@@ -6,6 +6,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+# --- POSTAVKE ZA EMAIL OBAVIJESTI ---
 GMAIL_USER = "adorabeatyconcept.official0@gmail.com"
 GMAIL_PASSWORD = "tioxyxkgrbflbnic"
 
@@ -42,6 +43,7 @@ def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
         # Ako mail ne ode, ovdje ispisujemo gresku u logovima za provjeru
         print(f"Greska pri slanju maila: {e}")
 
+# --- KONFIGURACIJA I BAZA PODATAKA ---
 DB_FILE = "termini.csv"
 
 def ucitaj_termine():
@@ -61,6 +63,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme):
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
+# --- GLAVNI PROGRAM ---
 st.set_page_config(page_title="Rezervacija Termina", layout="centered")
 
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel (Za tebe)"])
