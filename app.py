@@ -58,7 +58,7 @@ st.info("""⚠️ **Napomena:**
 - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
 - Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.""")
 
-# Gumb za otkazivanje (izravno dostupan)
+# Gumb za otkazivanje
 if st.button("❌ Želim otkazati termin"):
     prozor_otkazivanje()
 
@@ -84,7 +84,9 @@ if kat:
     if usluga:
         col1, col2 = st.columns(2)
         with col1: datum = st.date_input("Datum:", min_value=datetime.today())
-        with col2: vrijeme = st.time_input("Vrijeme:", value=dt_time(12, 0))
+        with col2: 
+            # Ograničenje vremena od 08:00 do 20:00
+            vrijeme = st.time_input("Vrijeme:", value=dt_time(8, 0), min_value=dt_time(8, 0), max_value=dt_time(20, 0))
         
         if st.button("POTVRDI REZERVACIJU"):
             if ime and kontakt:
