@@ -100,25 +100,30 @@ if kat:
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje termina")
 
-# Korisnik sada unosi kod, što je najprecizniji način pretrage
-kod_za_provjeru = st.text_input("Unesite kod rezervacije za provjeru ili otkazivanje:")
+ime_provjera = st.text_input("Unesite ime za provjeru rezervacije:")
 
-if kod_za_provjeru:
+if ime_provjera:
     df = ucitaj_termine()
-    # Tražimo termin koji točno odgovara unesenom kodu (bez obzira na ime)
-    moj_termin = df[df['Kod'] == kod_za_provjeru.upper()]
+    # .str.contains() pronalazi sve termine gdje ime sadrži upisani tekst (case=False ignorira velika/mala slova)
+    # na=False osigurava da ne bude greške ako u bazi ima praznih polja
+    rezultati = df[df['Ime'].str.contains(ime_provjera, case=False, na=False)]
     
-    if not moj_termin.empty:
-        termin = moj_termin.iloc[0]
-        st.info(f"Pronađeni termin za: **{termin['Ime']}** | Usluga: **{termin['Usluga']}** | Datum: {termin['Datum']} | Vrijeme: {termin['Vrijeme']}")
-        
-        if st.button("❌ OTKAŽI OVAJ TERMIN"):
-            obrisani = obrisi_termin(kod_za_provjeru.upper())
-            st.success("Termin je uspješno otkazan.")
-            st.rerun()
+    if not rezultati.empty:
+        for index, row in rezultati.iterrows():
+            st.info(f"Pronađen termin za: **{row['Ime']}** | Usluga: {row['Usluga']} | Datum: {row['Datum']} | Vrijeme: {row['Vrijeme']}")
+            st.warning(f"🔑 Kod za ovaj termin je: **{row['Kod']}**")
+            
+            with st.expander(f"❌ Otkaži termin za {row['Ime']}"):
+                kod_unos = st.text_input(f"Potvrdite kod za otkazivanje ({row['Ime']}):", key=f"kod_{row['Kod']}")
+                if st.button("POTVRDI BRISANJE", key=f"btn_{row['Kod']}"):
+                    if kod_unos.strip().upper() == row['Kod']:
+                        obrisi_termin(row['Kod'])
+                        st.success("Termin je uspješno otkazan.")
+                        st.rerun()
+                    else:
+                        st.error("Pogrešan kod!")
     else:
-        st.error("Nema rezervacije s tim kodom. Provjerite jeste li dobro upisali.")
-# --- ADMIN SIDEBAR ---
+        st.write("Nema rezervacije s tim imenom. Provjerite jeste li dobro upisali.")# --- ADMIN SIDEBAR ---
 with st.sidebar:
     st.header("🔐 Admin")
     lozinka = st.text_input("Lozinka:", type="password")
