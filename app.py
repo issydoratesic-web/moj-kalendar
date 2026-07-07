@@ -17,11 +17,16 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, tip="rezerva
         
         data = {
             "content": naslov,
-            "embeds": [{"title": f"👤 Klijent: {ime}", "color": color, "fields": [
-                {"name": "✂️ Usluga", "value": usluga, "inline": False},
-                {"name": "📱 Kontakt", "value": kontakt, "inline": False},
-                {"name": "📅 Datum", "value": datum, "inline": True},
-                {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}]}]
+            "embeds": [{
+                "title": f"👤 Klijent: {ime}", 
+                "color": color, 
+                "fields": [
+                    {"name": "✂️ Usluga", "value": usluga, "inline": False},
+                    {"name": "📱 Kontakt", "value": kontakt, "inline": False},
+                    {"name": "📅 Datum", "value": datum, "inline": True},
+                    {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}
+                ]
+            }]
         }
         requests.post(DISCORD_WEBHOOK, json=data)
     except: pass
@@ -107,8 +112,10 @@ elif stranica == "❌ Otkazivanje":
             if st.button("POTVRDI OTKAZIVANJE"):
                 d_str = odabrani.split(" u ")[0]
                 red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
+                # Šaljemo pune podatke iz retka
                 posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
-                df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].index)
+                # Brisanje retka
+                df = df.drop(red.name)
                 df.to_csv(DB_FILE, index=False)
                 st.write("❌ Termin uspješno otkazan i obavijest poslana.")
                 time.sleep(2)
