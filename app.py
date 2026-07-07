@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 import requests
 
-# --- DISCORD FUNKCIJA ---
+# --- FUNKCIJE ---
 def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
     try:
         DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
@@ -16,7 +16,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
                 "fields": [
                     {"name": "✂️ Usluga", "value": usluga, "inline": False},
                     {"name": "📱 Kontakt", "value": kontakt, "inline": False},
-                    {"name": "📅 Datum", "value": str(datum), "inline": True},
+                    {"name": "📅 Datum", "value": datum, "inline": True},
                     {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}
                 ]
             }]
@@ -24,7 +24,6 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga):
         requests.post(DISCORD_WEBHOOK, json=data)
     except: pass
 
-# --- BAZA PODATAKA ---
 DB_FILE = "termini.csv"
 def ucitaj_termine():
     if os.path.exists(DB_FILE): return pd.read_csv(DB_FILE)
@@ -32,11 +31,12 @@ def ucitaj_termine():
 
 def spremi_termin(ime, kontakt, datum, vrijeme, usluga):
     df = ucitaj_termine()
-    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": str(datum), "Vrijeme": vrijeme, "Usluga": usluga, "Status": "Na cekanju"}])
+    # Datum spremamo kao string u formatu DD/MM/YYYY
+    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum, "Vrijeme": vrijeme, "Usluga": usluga, "Status": "Na cekanju"}])
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# --- GLAVNI PROGRAM ---
+# --- APP ---
 st.set_page_config(page_title="Adora Rezervacije", layout="centered")
 stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
@@ -75,26 +75,25 @@ if stranica == "Rezerviraj Termin":
             if usluga: puna_usluga = f"{kat} -> {usluga}"
     
     if puna_usluga:
-        datum = st.date_input("Datum:", min_value=datetime.today().date(), format="DD/MM/YYYY")
+        d_input = st.date_input("Datum:", min_value=datetime.today(), format="DD/MM/YYYY")
+        datum_str = d_input.strftime("%d/%m/%Y") # Konverzija u string
         
-        # LOGIKA ZA ZAUZETOST
         df_termini = ucitaj_termine()
-        zauzeti_termini = df_termini[df_termini['Datum'] == str(datum)]['Vrijeme'].tolist()
+        zauzeti = df_termini[df_termini['Datum'] == datum_str]['Vrijeme'].tolist()
         
         sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-        dostupna_vremena = [v for v in sva_vremena if v not in zauzeti_termini]
+        dostupna = [v for v in sva_vremena if v not in zauzeti]
         
-        if dostupna_vremena:
-            vrijeme = st.selectbox("Vrijeme:", dostupna_vremena)
+        if dostupna:
+            vrijeme = st.selectbox("Vrijeme:", dostupna)
             if st.button("Rezerviraj"):
                 if ime and kontakt:
-                    spremi_termin(ime, kontakt, datum, vrijeme, puna_usluga)
-                    posalji_discord_obavijest(ime, kontakt, datum, vrijeme, puna_usluga)
+                    spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
+                    posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.success("Termin uspješno rezerviran!")
                     st.rerun()
-                else: st.error("Molimo ispunite ime i kontakt.")
-        else:
-            st.warning("Nažalost, za ovaj datum nema više slobodnih termina.")
+                else: st.error("Ispunite ime i kontakt.")
+        else: st.warning("Nema slobodnih termina za ovaj datum.")
 
 elif stranica == "Admin Panel":
     st.title("🔐 Admin Pristup")
@@ -103,8 +102,7 @@ elif stranica == "Admin Panel":
         st.title("📥 Pristigli Termini")
         df = ucitaj_termine()
         st.dataframe(df, use_container_width=True)
-        if st.button("⚠️ Obriši sve termine"):
-            if os.path.exists(DB_FILE):
-                os.remove(DB_FILE)
-                st.rerun()
+        if st.button("⚠️ Obriši sve"):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.rerun()
     elif lozinka: st.error("Pogrešna lozinka!")
