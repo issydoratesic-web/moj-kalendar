@@ -4,33 +4,32 @@ from datetime import datetime
 import os
 import requests
 
-def posalji_email_obavijest(ime, kontakt, datum, vrijeme):
-    # Sustav sigurno povlači tvoj Hotmail iz postavki
+def posalji_discord_obavijest(ime, kontakt, datum, vrijeme):
     try:
-        HOTMAIL_USER = st.secrets["HOTMAIL_USER"]
+        DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
     except Exception as e:
-        st.error("Nedostaje HOTMAIL_USER u Streamlit Secrets!")
+        st.error("Nedostaje DISCORD_WEBHOOK u Streamlit Secrets!")
         return
 
-    naslov = f"Nova rezervacija: {ime}"
-    tijelo_maila = (
-        f"Imate novu rezervaciju!\n\n"
-        f"Ime i prezime: {ime}\n"
-        f"Instagram / Kontakt: {kontakt}\n"
-        f"Datum: {datum}\n"
-        f"Vrijeme: {vrijeme}"
-    )
+    # Elegantno formatirana Discord kartica (Embed)
+    data = {
+        "content": "🔔 **Stigla je nova rezervacija termina!**",
+        "embeds": [{
+            "title": f"👤 Klijent: {ime}",
+            "color": 15418782, # Elegantna rozna/crvena boja za tvoj salon
+            "fields": [
+                {"name": "📱 Kontakt (Instagram/Mobitel)", "value": kontakt, "inline": False},
+                {"name": "📅 Datum", "value": str(datum), "inline": True},
+                {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}
+            ],
+            "footer": {"text": "Adora Beauty Concept - Sustav obavijesti"}
+        }]
+    }
     
-    # Šaljemo izravno preko besplatnog FormSubmit servisa bez lozinki
     try:
-        response = requests.post(f"https://formsubmit.co/ajax/{HOTMAIL_USER}", data={
-            "_subject": naslov,
-            "Detalji": tijelo_maila
-        })
-        if response.status_code != 200:
-            st.error("Servis za slanje trenutno nije dostupan.")
+        requests.post(DISCORD_WEBHOOK, json=data)
     except Exception as e:
-        st.error(f"Greška kod slanja: {e}")
+        st.error(f"Greska kod slanja na Discord: {e}")
 
 # --- BAZA PODATAKA ---
 DB_FILE = "termini.csv"
@@ -52,6 +51,7 @@ stranica = st.sidebar.radio("Navigacija", ["Rezerviraj Termin", "Admin Panel"])
 
 if stranica == "Rezerviraj Termin":
     st.title("📅 Rezervirajte svoj termin")
+    st.write("Odaberite datum i vrijeme koji vam odgovaraju, a ja cu vam se javiti za potvrdu.")
     df_termini = ucitaj_termine()
     
     with st.form("rezervacija_forma", clear_on_submit=True):
@@ -67,14 +67,14 @@ if stranica == "Rezerviraj Termin":
             vrijeme = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
             poslano = st.form_submit_button("Rezerviraj")
         else:
-            st.warning("Svi termini za ovaj dan su zauzeti.")
+            st.warning("Svi termini za ovaj dan su zauzeti. Odaberite drugi datum.")
             poslano = False
             
         if poslano:
             if ime and kontakt:
                 spremi_termin(ime, kontakt, datum, vrijeme)
-                posalji_email_obavijest(ime, kontakt, datum, vrijeme)
-                st.success(f"Uspjesno poslano! Rezervirali ste {datum} u {vrijeme}.")
+                posalji_discord_obavijest(ime, kontakt, datum, vrijeme)
+                st.success(f"Uspjesno poslano! Rezervirali ste {datum} u {vrijeme}. Javit cu vam se uskoro!")
             else:
                 st.error("Molimo ispunite sva polja.")
 
