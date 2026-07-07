@@ -45,6 +45,7 @@ st.title("✨ Adora Beauty Concept")
 
 st.info("⚠️ **Napomena:** Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju (50%) na IBAN: HR03 2402 0061 1406 1395 3.")
 
+# --- NOVA REZERVACIJA ---
 st.subheader("Nova rezervacija")
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
@@ -59,7 +60,7 @@ ime = st.text_input("Ime i Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
 kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
-odabrano_vrijeme = None # Inicijalizacija
+odabrano_vrijeme = None 
 
 if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
@@ -114,4 +115,15 @@ with st.sidebar:
     lozinka = st.text_input("Lozinka:", type="password")
     if lozinka == st.secrets.get("ADMIN_PASSWORD"):
         st.subheader("Popis svih termina")
-        st.dataframe(ucitaj_termine())
+        df_admin = ucitaj_termine()
+        st.dataframe(df_admin)
+        
+        st.subheader("Brisanje termina (Admin)")
+        kod_za_brisanje = st.text_input("Unesite KOD za brisanje:")
+        if st.button("OBRIŠI TERMIN"):
+            if kod_za_brisanje in df_admin['Kod'].values:
+                obrisi_termin(kod_za_brisanje)
+                st.success("Termin obrisan!")
+                st.rerun()
+            else:
+                st.error("Kod nije pronađen.")
