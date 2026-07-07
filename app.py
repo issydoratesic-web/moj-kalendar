@@ -118,4 +118,4 @@ if ime_otkazivanje:
 # --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
-    lozinka = st.text_input("Lozinka:", type="password
+    lozinka = st.text_input("Lozinka:", type="password")
