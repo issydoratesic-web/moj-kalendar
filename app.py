@@ -72,7 +72,8 @@ if stranica == "📅 Rezervacija":
         datum_str = d_input.strftime("%d/%m/%Y")
         df = ucitaj_termine()
         zauzeti = df[df['Datum'] == datum_str]['Vrijeme'].tolist()
-        dostupna = [v for v in ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"] if v not in zauzeti]
+        sva_vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
+        dostupna = [v for v in sva_vremena if v not in zauzeti]
         
         if dostupna:
             vrijeme = st.selectbox("Slobodno vrijeme:", dostupna)
@@ -83,10 +84,8 @@ if stranica == "📅 Rezervacija":
                     spremi_termin(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     posalji_discord_obavijest(ime, kontakt, datum_str, vrijeme, puna_usluga)
                     st.session_state['zadnji_klik'] = time.time()
-                    placeholder = st.empty()
-                    placeholder.success("Termin uspješno rezerviran!")
-                    time.sleep(4)
-                    placeholder.empty()
+                    st.success("Termin uspješno rezerviran!")
+                    time.sleep(2)
                     st.rerun()
 
 elif stranica == "❌ Otkazivanje":
@@ -98,8 +97,21 @@ elif stranica == "❌ Otkazivanje":
         if not termini.empty:
             odabrani = st.selectbox("Odaberite termin:", termini['Datum'] + " u " + termini['Vrijeme'])
             if st.button("POTVRDI OTKAZIVANJE"):
-                d_termin = datetime.strptime(odabrani.split(" u ")[0], "%d/%m/%Y")
+                d_str = odabrani.split(" u ")[0]
+                d_termin = datetime.strptime(d_str, "%d/%m/%Y")
                 if d_termin - datetime.now() < timedelta(days=2):
                     st.error("Ne možete otkazati unutar 48 sati!")
                 else:
-                    df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == odabrani.split
+                    df = df.drop(df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].index)
+                    df.to_csv(DB_FILE, index=False)
+                    st.success("Termin otkazan.")
+                    time.sleep(2)
+                    st.rerun()
+
+elif stranica == "🔐 Admin Panel":
+    lozinka = st.text_input("Lozinka:", type="password")
+    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
+        st.dataframe(ucitaj_termine(), use_container_width=True)
+        if st.button("Obriši sve"):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.rerun()
