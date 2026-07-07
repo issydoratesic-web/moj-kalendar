@@ -73,7 +73,8 @@ if stranica == "Rezerviraj Termin":
         usluga = st.selectbox("Odaberite uslugu:", usluge_mapa[kat])
         puna_usluga = f"{kat} -> {usluga}"
     
-    datum = st.date_input("Datum:", min_value=datetime.today().date())
+    # Zamijeni svoj postojeći redak za datum ovim:
+datum = st.date_input("Datum:", min_value=datetime.today().date(), format="DD/MM/YYYY")
     vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
     vrijeme = st.selectbox("Vrijeme:", vremena)
     
