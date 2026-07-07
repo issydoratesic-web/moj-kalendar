@@ -28,10 +28,8 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, kod, tip="re
 
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
-        df = pd.read_csv("termini.csv")
-        # Prisilno formatiranje pri svakom učitavanju
-        df['Datum'] = pd.to_datetime(df['Datum'], dayfirst=True, errors='coerce').dt.strftime('%d/%m/%Y')
-        return df
+        # Učitavamo datum strogo kao tekst (string) da se ne mijenja format
+        return pd.read_csv("termini.csv", dtype={'Datum': str})
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
 
 def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
@@ -44,6 +42,7 @@ def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
 
 def obrisi_tocan_termin(ime, datum, vrijeme):
     df = ucitaj_termine()
+    # Brisanje retka koji točno odgovara unesenim podacima
     novi_df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
     novi_df.to_csv("termini.csv", index=False)
 
@@ -113,9 +112,10 @@ with st.sidebar:
         df_a = ucitaj_termine()
         st.dataframe(df_a)
         opcije = df_a.apply(lambda x: f"{x['Ime']} ({x['Datum']} - {x['Vrijeme']})", axis=1).tolist()
-        odabrani = st.selectbox("Brisanje:", opcije)
-        if st.button("OBRIŠI ODABRANI"):
-            dio = odabrani.split(" (")
-            datum_vr = dio[1].replace(")", "").split(" - ")
-            obrisi_tocan_termin(dio[0], datum_vr[0], datum_vr[1])
-            st.rerun()
+        if opcije:
+            odabrani = st.selectbox("Brisanje:", opcije)
+            if st.button("OBRIŠI ODABRANI"):
+                dio = odabrani.split(" (")
+                datum_vr = dio[1].replace(")", "").split(" - ")
+                obrisi_tocan_termin(dio[0], datum_vr[0], datum_vr[1])
+                st.rerun()
