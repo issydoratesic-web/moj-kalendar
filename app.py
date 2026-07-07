@@ -105,8 +105,9 @@ elif stranica == "❌ Otkazivanje":
             if st.button("POTVRDI OTKAZIVANJE"):
                 d_str = odabrani.split(" u ")[0]
                 d_termin = datetime.strptime(d_str, "%d/%m/%Y")
-                if d_termin - datetime.now() < timedelta(days=2):
-                    st.error("Ne možete otkazati unutar 48 sati!")
+                # Provjera roka od 24 sata
+                if d_termin - datetime.now() < timedelta(hours=24):
+                    st.error("Ne možete otkazati unutar 24 sata prije termina!")
                 else:
                     red = df[(df['Ime'] == ime_klijenta) & (df['Datum'] == d_str)].iloc[0]
                     posalji_discord_obavijest(red['Ime'], red['Kontakt'], red['Datum'], red['Vrijeme'], red['Usluga'], tip="otkazivanje")
