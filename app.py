@@ -17,19 +17,28 @@ def ucitaj_termine():
 
 def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
     df = ucitaj_termine()
-    datum_str = datum_obj.strftime('%d/%m/%Y') # Forsiramo DD/MM/YYYY
+    datum_str = datum_obj.strftime('%d/%m/%Y') # Forsiramo DD/MM/YYYY za bazu
     novi = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
-def obrisi_termin(ime, datum, vrijeme):
+def obrisi_termin(ime, datum_str, vrijeme):
     df = ucitaj_termine()
-    df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
+    df['Datum'] = df['Datum'].astype(str)
+    mask = (df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum_str) & (df['Vrijeme'] == vrijeme)
+    df = df[~mask]
     df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
-st.info("⚠️ Rezervacije i otkazivanje.")
+
+# VRACENE NAPOMENE
+st.info("""
+⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
+Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
+
+• Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3
+""")
 
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
@@ -39,7 +48,6 @@ usluge_mapa = {
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-# --- NOVA REZERVACIJA ---
 ime = st.text_input("Ime i Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
 kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
@@ -48,7 +56,8 @@ if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
     if usluga:
         datum = st.date_input("Datum:", min_value=datetime.today())
-        st.caption(f"Datum spremanja u bazu: {datum.strftime('%d/%m/%Y')}")
+        # Vizualna potvrda za tebe da znaš što ide u bazu
+        st.write(f"Odabrani datum za bazu: **{datum.strftime('%d/%m/%Y')}**")
         
         df_svi = ucitaj_termine()
         dat_str = datum.strftime("%d/%m/%Y")
@@ -64,7 +73,6 @@ if kat:
                 time_module.sleep(2)
                 st.rerun()
 
-# --- PROVJERA ---
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje")
 ime_pretraga = st.text_input("Ime za provjeru:")
@@ -77,7 +85,6 @@ if ime_pretraga:
             obrisi_termin(row['Ime'], row['Datum'], row['Vrijeme'])
             st.rerun()
 
-# --- ADMIN ---
 with st.sidebar:
     st.header("🔐 Admin")
     if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
