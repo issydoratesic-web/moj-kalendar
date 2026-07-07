@@ -29,28 +29,27 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme, usluga, kod, tip="re
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         df = pd.read_csv("termini.csv")
-        # --- OVO JE KLJUČNO ZA FORMAT DATUMA ---
-        # Pokušava pretvoriti bilo koji format u datetime, a zatim formatira u DD/MM/YYYY
+        # Prisilno formatiranje pri svakom učitavanju
         df['Datum'] = pd.to_datetime(df['Datum'], dayfirst=True, errors='coerce').dt.strftime('%d/%m/%Y')
         return df
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
 
-def spremi_termin(ime, kontakt, datum, vrijeme, usluga, kod):
+def spremi_termin(ime, kontakt, datum_obj, vrijeme, usluga, kod):
     df = ucitaj_termine()
-    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
+    # Prisilno formatiranje u string DD/MM/YYYY
+    datum_str = datum_obj.strftime('%d/%m/%Y')
+    novi_termin = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
     df = pd.concat([df, novi_termin], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
 def obrisi_tocan_termin(ime, datum, vrijeme):
     df = ucitaj_termine()
-    # Osiguravamo da uspoređujemo stringove datuma u istom formatu
     novi_df = df[~((df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == datum) & (df['Vrijeme'] == vrijeme))]
     novi_df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-# NAPOMENA
 st.info("""
 ⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
 - Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
@@ -88,7 +87,7 @@ if kat:
                 st.warning("Unesite puno ime i prezime.")
             else:
                 kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                spremi_termin(ime.strip(), kontakt, dat_str, odabrano_vrijeme, usluga, kod)
+                spremi_termin(ime.strip(), kontakt, datum, odabrano_vrijeme, usluga, kod)
                 posalji_discord_obavijest(ime.strip(), kontakt, dat_str, odabrano_vrijeme, usluga, kod)
                 st.success("Vaš termin je uspješno rezerviran!")
                 time_module.sleep(5)
