@@ -3,10 +3,9 @@ import pandas as pd
 import os
 import time
 
-# --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
-# Definiramo usluge i cijene
+# Definiranje usluga s cijenama
 usluge_mapa = {
     "Šminkanje": {"Šminkanje (40€)": "40€", "Terensko šminkanje (50€)": "50€"},
     "Obrve": {"Oblikovanje pincetom (8€)": "8€", "Oblikovanje i bojanje (15€)": "15€", "Brow lift (30€)": "30€"},
@@ -15,60 +14,45 @@ usluge_mapa = {
     "Little Luxe Spa": {"Mini (50€)": "50€", "Classic (70€)": "70€", "VIP (100€)": "100€"}
 }
 
-# --- FUNKCIJE ---
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
-        df = pd.read_csv("termini.csv")
-        # Osiguravamo da postoje potrebni stupci
-        for col in ["Ime_Prezime", "Kontakt", "Datum", "Usluga", "Cijena"]:
-            if col not in df.columns: df[col] = ""
-        return df
-    return pd.DataFrame(columns=["Ime_Prezime", "Kontakt", "Datum", "Usluga", "Cijena"])
+        return pd.read_csv("termini.csv")
+    return pd.DataFrame(columns=["Ime", "Prezime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
 
-def spremi_termin(ime, kontakt, datum, usluga, cijena):
-    df = ucitaj_termine()
-    novi = pd.DataFrame([{"Ime_Prezime": ime.strip(), "Kontakt": kontakt, "Datum": datum, "Usluga": usluga, "Cijena": cijena}])
-    df = pd.concat([df, novi], ignore_index=True)
-    df.to_csv("termini.csv", index=False)
-
-# --- UI ---
+# UI
 st.title("✨ Adora Beauty Concept")
-st.info("⚠️ Napomena: Otkazivanje termina min. 24h prije. Akontacija 50% za šminkanje.")
 
-st.subheader("Nova rezervacija")
-ime = st.text_input("Unesite PUNO IME I PREZIME:")
+c1, c2 = st.columns(2)
+ime = c1.text_input("Ime:")
+prezime = c2.text_input("Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
 
 kat = st.selectbox("Kategorija:", list(usluge_mapa.keys()))
-usluga_labela = st.selectbox("Usluga:", list(usluge_mapa[kat].keys()))
-cijena = usluge_mapa[kat][usluga_labela]
+usluga = st.selectbox("Usluga:", list(usluge_mapa[kat].keys()))
 
-datum = st.date_input("Odaberite datum:")
+d, m, g, v = st.columns(4)
+dan = d.selectbox("Dan:", range(1, 32))
+mjesec = m.selectbox("Mjesec:", range(1, 13))
+godina = g.selectbox("Godina:", [2026, 2027])
+vrijeme = v.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 20)])
 
 if st.button("POTVRDI REZERVACIJU"):
-    if ime:
-        spremi_termin(ime, kontakt, str(datum), usluga_labela, cijena)
-        st.success("VAŠ TERMIN JE USPJEŠNO REZERVIRAN!")
-        time.sleep(1)
-        st.rerun()
-    else:
-        st.warning("Molimo unesite ime i prezime.")
+    df = ucitaj_termine()
+    novi = pd.DataFrame([{"Ime": ime, "Prezime": prezime, "Kontakt": kontakt, 
+                          "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": usluga}])
+    df = pd.concat([df, novi], ignore_index=True)
+    df.to_csv("termini.csv", index=False)
+    st.success("Termin potvrđen!")
+    time.sleep(1); st.rerun()
 
-# --- ADMIN PANEL ---
+# ADMIN
 with st.sidebar:
     st.header("🔐 Admin")
-    pw = st.text_input("Lozinka:", type="password")
-    if pw == st.secrets.get("ADMIN_PASSWORD"):
-        st.write("### Upravljanje terminima")
+    if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
         df = ucitaj_termine()
+        st.dataframe(df)
         if not df.empty:
-            opcije = df.apply(lambda x: f"{x['Ime_Prezime']} | {x['Datum']} | {x['Usluga']}", axis=1).tolist()
-            odabrani = st.selectbox("Odaberi termin:", opcije)
-            if st.button("OBRIŠI ODABRANI"):
-                idx = opcije.index(odabrani)
-                df = df.drop(df.index[idx])
-                df.to_csv("termini.csv", index=False)
+            idx = st.selectbox("Odaberi red za brisanje:", df.index)
+            if st.button("OBRIŠI"):
+                df.drop(idx).to_csv("termini.csv", index=False)
                 st.rerun()
-            st.dataframe(df)
-        else:
-            st.write("Nema rezervacija.")
