@@ -8,7 +8,7 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
-    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4"
+    webhook_url = "TVOJ_DISCORD_WEBHOOK_URL_OVDJE"
     embed = {
         "title": naslov,
         "color": 16753920,
@@ -61,7 +61,7 @@ with st.sidebar:
 
 # --- GLAVNI UI ---
 st.title("✨ Adora Beauty Concept")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju u iznosu 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3 </div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena: (alergije, osjetljiva koža)</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
 
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
@@ -97,12 +97,12 @@ if kat:
         c1, c2, c3 = st.columns(3)
         dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
         mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
-        godina = c3.selectbox("Godina:", ["2026", "2027"])
+        godina = c3.selectbox("Godina:", [str(i) for i in range(2026, 2031)])
         
         if st.button("POTVRDI REZERVACIJU"):
             if ime and prezime and kontakt and novi_klijent:
                 df = ucitaj_termine()
-                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena (alergije, osjetljiva koža)": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
                 pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
                 
                 posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Lam: {lam_da_ne}, Aler: {alergije}")
