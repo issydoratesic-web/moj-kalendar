@@ -96,14 +96,20 @@ if kat:
 # --- OTKAZIVANJE TERMINA ---
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
-ime_otkaz = st.text_input("Upišite puno ime i prezime za otkaz:")
-if ime_otkaz:
+ime_otkaz_input = st.text_input("Upišite puno ime i prezime za otkaz:")
+
+if ime_otkaz_input:
     df = ucitaj_termine()
-    moji = df[df['Ime'].str.lower() == ime_otkaz.strip().lower()]
-    for idx, row in moji.iterrows():
-        if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
-            obrisi_termin_po_indexu(idx)
-            st.rerun()
+    moji_termini = df[df['Ime'].str.lower() == ime_otkaz_input.strip().lower()]
+    
+    if not moji_termini.empty:
+        for idx, row in moji_termini.iterrows():
+            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
+                obrisi_termin_po_indexu(idx)
+                st.success(f"Termin za {row['Usluga']} je otkazan.")
+                st.rerun()
+    else:
+        st.warning("Nije pronađen nijedan termin za to ime.")
 
 # --- ADMIN PANEL ---
 with st.sidebar:
