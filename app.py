@@ -116,28 +116,26 @@ if ime_otkaz:
 # --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
-    # Ovo mora točno ovako izgledati u tvom kodu:
-if st.text_input("Lozinka:", type="password") == st.secrets["ADMIN_PASSWORD"]:
-    # Ovdje se nalazi ostatak admin panela
+    admin_pw = st.text_input("Lozinka:", type="password")
+    
+    # Koristimo siguran pristup tajnama
+    if admin_pw == st.secrets.get("ADMIN_PASSWORD"):
+        st.write("✅ Prijavljeni ste")
         df = ucitaj_termine()
         st.subheader("Upravljanje terminima")
         
-        # Stvaramo listu opcija za padajući izbornik
-        # Svaka opcija sadrži ime, datum i vrijeme za lakšu identifikaciju
-        opcije = df.apply(lambda x: f"{x['Ime']} {x['Prezime']} | {x['Datum']} | {x['Vrijeme']}", axis=1).tolist()
-        
-        if opcije:
+        if not df.empty:
+            opcije = df.apply(lambda x: f"{x['Ime']} {x['Prezime']} | {x['Datum']}", axis=1).tolist()
             odabrani_termin = st.selectbox("Odaberi termin za brisanje:", opcije)
             
             if st.button("OBRIŠI ODABRANI"):
-                # Pronalazimo indeks odabranog termina
-                index_za_brisanje = opcije.index(odabrani_termin)
-                
-                # Brišemo iz DataFrame-a
-                df = df.drop(df.index[index_za_brisanje])
+                idx = opcije.index(odabrani_termin)
+                df = df.drop(df.index[idx])
                 df.to_csv("termini.csv", index=False)
-                
-                st.success("Termin je obrisan!")
+                st.success("Termin obrisan!")
                 st.rerun()
         else:
-            st.write("Nema rezerviranih termina.")
+            st.info("Nema rezervacija u bazi.")
+    else:
+        if admin_pw:
+            st.error("Netočna lozinka.")
