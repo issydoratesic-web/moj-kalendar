@@ -6,7 +6,6 @@ import requests
 
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
-# --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
     webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4"
     embed = {
@@ -20,8 +19,14 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    try: requests.post(webhook_url, json=data)
-    except: pass
+    try:
+        # Dodan timeout od 10 sekundi kako ne bi blokiralo aplikaciju
+        response = requests.post(webhook_url, json=data, timeout=10)
+        # Ako želiš vidjeti u logovima što se događa, makni komentar sa sljedeće linije:
+        # print(f"Discord status: {response.status_code}")
+    except Exception as e:
+        # Ovo će ispisati grešku u tvoj Streamlit log (Manage app -> Logs)
+        print(f"Greška pri slanju na Discord: {e}")
 
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
