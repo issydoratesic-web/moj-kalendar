@@ -47,12 +47,25 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga, novi, napomena, lam, ale
 with st.sidebar:
     st.header("🔐 Admin Panel")
     password = st.text_input("Lozinka:", type="password")
-    if password == "171102":
-        st.subheader("Pregled svih termina")
-        df_admin = ucitaj_termine()
-        st.dataframe(df_admin)
-        if st.download_button("Preuzmi CSV", df_admin.to_csv(index=False), "termini.csv"):
+    
+    if password == "Admin123":
+        st.subheader("Pregled i otkazivanje termina")
+        df = ucitaj_termine()
+        
+        # Prikaz svakog termina s gumbom za brisanje
+        for idx, row in df.iterrows():
+            with st.expander(f"{row['Ime']} - {row['Datum']} ({row['Vrijeme']})"):
+                st.write(f"**Usluga:** {row['Usluga']}")
+                st.write(f"**Kontakt:** {row['Kontakt']}")
+                if st.button(f"OBRIŠI TERMIN: {row['Ime']}", key=f"del_{idx}"):
+                    df.drop(idx).to_csv("termini.csv", index=False)
+                    st.success("Termin obrisan!")
+                    st.rerun()
+        
+        st.markdown("---")
+        if st.download_button("Preuzmi cijeli CSV", df.to_csv(index=False), "termini.csv"):
             st.success("Preuzeto!")
+            
     elif password:
         st.error("Pogrešna lozinka!")
 
