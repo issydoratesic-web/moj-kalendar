@@ -8,7 +8,7 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
-    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4"
+    webhook_url = "https://discord.com/api/webhooks/1524442178896658673/2hu1ajtJxHlG-uOs8o5ticqUcaQtctnT5meKpTbr3bk1DvUnndBBTLBu1S1hBgL7sApo"
     embed = {
         "title": naslov,
         "color": 16753920,
