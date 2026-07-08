@@ -3,27 +3,27 @@ import pandas as pd
 from datetime import datetime
 import os
 import time as time_module
-import random
-import string
 
 st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
-        return pd.read_csv("termini.csv", dtype=str)
-    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Kod"])
+        # Učitavamo bez 'Kod' stupca ako ga više ne koristimo
+        df = pd.read_csv("termini.csv", dtype=str)
+        return df
+    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
 
-def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga, kod):
+def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga):
     df = ucitaj_termine()
-    novi = pd.DataFrame([{"Ime": ime_puno, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga, "Kod": kod}])
+    novi = pd.DataFrame([{"Ime": ime_puno, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga}])
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
-def obrisi_termin_po_kodu(kod_za_brisanje):
+def obrisi_termin_admin(index):
     df = ucitaj_termine()
-    novi_df = df[df['Kod'] != kod_za_brisanje]
-    novi_df.to_csv("termini.csv", index=False)
+    df = df.drop(index)
+    df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
@@ -35,7 +35,6 @@ Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 
 • Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3
 """)
 
-# USLUGE S CIJENAMA
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€"],
@@ -64,7 +63,6 @@ if kat:
         with col3: godina = st.selectbox("Godina:", [str(g) for g in range(aktualna, 2036)])
         
         dat_str = f"{dan}/{mjesec}/{godina}"
-        st.write(f"📅 Odabrani datum: **{dat_str}**")
         
         df_svi = ucitaj_termine()
         zauzeti = df_svi[df_svi['Datum'] == dat_str]['Vrijeme'].tolist()
@@ -76,32 +74,26 @@ if kat:
                 st.error("❌ Molimo vas da upišete Ime, Prezime i Kontakt!")
             else:
                 ime_puno = f"{ime.strip()} {prezime.strip()}"
-                kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga, kod)
-                st.success(f"✅ Rezervacija potvrđena! Tvoj kod je: **{kod}**")
+                spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga)
+                st.success("✅ Rezervacija uspješno zabilježena!")
                 time_module.sleep(2)
                 st.rerun()
 
-st.markdown("---")
-st.subheader("🔎 Provjera i otkazivanje")
-
-ime_pretraga = st.text_input("Upišite PUNO IME I PREZIME za provjeru:")
-if ime_pretraga:
-    df = ucitaj_termine()
-    moji = df[df['Ime'].str.lower() == ime_pretraga.strip().lower()]
-    if not moji.empty:
-        for idx, row in moji.iterrows():
-            st.write(f"---")
-            st.write(f"**Usluga:** {row['Usluga']} | **Datum:** {row['Datum']} | **Vrijeme:** {row['Vrijeme']}")
-            st.write(f"**Kod rezervacije:** `{row['Kod']}`")
-            if st.button(f"❌ Otkazi termin {row['Kod']}", key=f"b{idx}"):
-                obrisi_termin_po_kodu(row['Kod'])
-                st.success("Termin otkazan!")
-                st.rerun()
-    else:
-        st.warning("Nema pronađenih termina za to ime.")
-
+# --- ADMIN PANEL ---
 with st.sidebar:
-    st.header("🔐 Admin")
-    if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
-        st.dataframe(ucitaj_termine())
+    st.header("🔐 Admin Panel")
+    lozinka = st.text_input("Lozinka:", type="password")
+    
+    if lozinka == st.secrets.get("ADMIN_PASSWORD"):
+        st.subheader("Upravljanje terminima")
+        df = ucitaj_termine()
+        if not df.empty:
+            for idx, row in df.iterrows():
+                st.write(f"**{row['Ime']}** | {row['Datum']} | {row['Vrijeme']}")
+                if st.button(f"❌ Obriši termin", key=f"del_{idx}"):
+                    obrisi_termin_admin(idx)
+                    st.rerun()
+        else:
+            st.write("Nema aktivnih termina.")
+    elif lozinka != "":
+        st.error("Pogrešna lozinka!")
