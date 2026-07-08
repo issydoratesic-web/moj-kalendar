@@ -41,7 +41,7 @@ def ucitaj_ocjene():
     return pd.DataFrame()
 
 # --- CSS ---
-st.markdown("""<style>.custom-box { background-color: #fff0f5; padding: 15px; border-radius: 10px; border-left: 5px solid #d63384; color: #4a4a4a; } .review-box { background-color: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ddd; }</style>""", unsafe_allow_html=True)
+st.markdown("""<style>.custom-box { background-color: #fff0f5; padding: 15px; border-radius: 10px; border-left: 5px solid #d63384; color: #4a4a4a; } .review-box { background-color: #fff0f5; padding: 15px; border-radius: 10px; border-left: 5px solid #d63384; margin-bottom: 15px; color: #4a4a4a; }</style>""", unsafe_allow_html=True)
 
 # --- ADMIN PANEL ---
 with st.sidebar:
