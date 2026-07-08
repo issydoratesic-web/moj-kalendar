@@ -6,9 +6,50 @@ import requests
 
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
+# --- CSS STILOVI (SVJETLO ROZE IZBORNICI) ---
+st.markdown("""
+    <style>
+    /* Boja pozadine cijele stranice */
+    .stApp { background-color: #fdfbfb; }
+    
+    /* Glavni naslov */
+    h1 { color: #d63384; text-align: center; }
+    
+    /* Svijetlo roza boja za izbornike (selectbox) */
+    div[data-baseweb="select"] > div {
+        background-color: #fff0f5 !important;
+        border: 1px solid #ffc0cb !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Prilagođeni box */
+    .custom-box { 
+        background-color: #fff0f5; 
+        padding: 20px; 
+        border-radius: 15px; 
+        border-left: 10px solid #d63384; 
+        color: #5a5a5a;
+        margin-bottom: 20px;
+    }
+    
+    /* Stil gumba */
+    div.stButton > button {
+        background-color: #d63384;
+        color: white;
+        border-radius: 10px;
+        width: 100%;
+        border: none;
+        padding: 10px;
+    }
+    div.stButton > button:hover {
+        background-color: #b02a6c;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
-    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4" # OVDJE UBIČI SVOJ URL
+    webhook_url = "TVOJ_DISCORD_WEBHOOK_URL_OVDJE" 
     embed = {
         "title": naslov,
         "color": 16753920,
@@ -20,17 +61,8 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    try:
-        requests.post(webhook_url, json=data)
-    except:
-        pass
-
-# --- CSS STILOVI ---
-st.markdown("""
-    <style>
-    .custom-box { background-color: #fff0f5; padding: 15px; border-radius: 10px; border-left: 5px solid #d63384; color: #4a4a4a; }
-    </style>
-    """, unsafe_allow_html=True)
+    try: requests.post(webhook_url, json=data)
+    except: pass
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
@@ -49,22 +81,20 @@ with st.sidebar:
             if pwd == "171102": st.session_state.admin_auth = True; st.rerun()
             else: st.error("Pogrešna lozinka!")
     else:
-        if st.button("Odjava", key="logout_btn"): st.session_state.admin_auth = False; st.rerun()
+        if st.button("Odjava"): st.session_state.admin_auth = False; st.rerun()
         st.subheader("Upravljanje terminima")
         df = ucitaj_termine()
         for idx, row in df.iterrows():
             with st.expander(f"{row['Ime']} - {row['Datum']}"):
                 st.write(f"Usluga: {row['Usluga']}")
-                st.write(f"Kontakt: {row['Kontakt']}")
-                if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
-                    posalji_na_discord("❌ Termin otkazan", row['Ime'], row['Usluga'], row['Kontakt'], "Termin je uklonjen iz sustava.")
+                if st.button(f"OBRIŠI {row['Ime']}", key=f"del_{idx}"):
+                    posalji_na_discord("❌ Termin otkazan", row['Ime'], row['Usluga'], row['Kontakt'], "Uklonjeno iz sustava.")
                     df.drop(idx).to_csv("termini.csv", index=False)
-                    st.success("Obrisano!"); st.rerun()
-        if st.download_button("Preuzmi CSV", df.to_csv(index=False), "termini.csv"): st.success("Pokrenuto!")
+                    st.rerun()
 
 # --- GLAVNI UI ---
 st.title("✨ Adora Beauty Concept")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina min. 24h ranije.<br>• Šminkanje: obavezna akontacija 50%.<br>IBAN: HR03 2402 0061 1406 1395 3</div>""", unsafe_allow_html=True)
 
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
@@ -77,10 +107,7 @@ usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
     "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
     "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
-    "Frizure": [
-        "Kratka kosa - Ravnanje - 10€", "Kratka kosa - Uvijanje - 20€", "Kratka kosa - Hollywood valovi - 25€", "Kratka kosa - Elegantni repovi - 15€",
-        "Duga kosa - Ravnanje - 20€", "Duga kosa - Uvijanje - 30€", "Duga kosa - Hollywood valovi - 35€", "Duga kosa - Elegantni repovi - 25€"
-    ],
+    "Frizure": ["Kratka kosa - Ravnanje - 10€", "Duga kosa - Uvijanje - 30€"],
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
@@ -89,14 +116,8 @@ if kat:
     if usluga:
         st.subheader("Dodatna pitanja")
         novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-        napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
+        napomena = st.text_area("Napomena:")
         
-        lam_da_ne, alergije = "N/A", "N/A"
-        if "Brow lift" in usluga:
-            st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
-            lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju?", ["Da", "Ne"], index=None)
-            alergije = st.text_input("Imate li poznate alergije?")
-
         c1, c2, c3 = st.columns(3)
         dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
         mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
@@ -105,17 +126,11 @@ if kat:
         if st.button("POTVRDI REZERVACIJU"):
             if ime and prezime and kontakt and novi_klijent:
                 df = ucitaj_termine()
-                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena}])
                 pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-                
-                # Ovdje je ispravljen f-string da bude u jednoj liniji
-                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
-                
-                placeholder = st.empty()
-                placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
-                time.sleep(10)
-                placeholder.empty()
-                st.rerun()
+                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}")
+                st.success("Hvala na rezervaciji! 🌸")
+                time.sleep(2); st.rerun()
             else: st.error("Molimo ispunite obavezna polja.")
 
 st.markdown("---")
@@ -126,10 +141,8 @@ if ime_otkaz:
     moji = df[df['Ime'].str.lower() == ime_otkaz.strip().lower()]
     if not moji.empty:
         for idx, row in moji.iterrows():
-            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_user_{idx}"):
-                posalji_na_discord("❌ Termin otkazan od strane klijenta", row['Ime'], row['Usluga'], row['Kontakt'], "Klijent je sam otkazao termin.")
+            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})"):
+                posalji_na_discord("❌ Termin otkazan", row['Ime'], row['Usluga'], row['Kontakt'], "Klijent je sam otkazao.")
                 df.drop(idx).to_csv("termini.csv", index=False)
-                st.success("Vaš termin je uspješno otkazan!")
-                time.sleep(2)
-                st.rerun()
-    else: st.warning("Nije pronađen termin.")
+                st.success("Vaš termin je uspješno otkazan! 🌸")
+                time.sleep(2); st.rerun()
