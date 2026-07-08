@@ -28,9 +28,44 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
 # --- CSS STILOVI ---
 st.markdown("""
     <style>
-    .custom-box { background-color: #fff0f5; padding: 15px; border-radius: 10px; border-left: 5px solid #d63384; color: #4a4a4a; }
+    /* 1. Pozadina stranice - čista i neutralna */
+    .stApp { background-color: #FAFAFA !important; }
+
+    /* 2. LUKSUZNI NASLOV */
+    .luxury-title {
+        color: #2D2926 !important; /* Tamno siva/crna za eleganciju */
+        font-family: 'Georgia', 'Playfair Display', serif !important;
+        font-size: 45px !important;
+        font-weight: 400 !important;
+        text-align: center !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        margin-bottom: 40px;
+        padding-top: 20px;
+    }
+
+    /* 3. POLJA ZA UNOS (Bijela, čista, s tankim rubom) */
+    div[data-baseweb="base-input"], div[data-baseweb="select"] > div, input, textarea {
+        background-color: #FFFFFF !important;
+        color: #333333 !important;
+        border: 1px solid #E0E0E0 !important;
+        border-radius: 0px !important; /* Luksuzni brendovi često koriste oštre rubove */
+    }
+
+    /* 4. GUMBI - Minimalistički */
+    div.stButton > button {
+        background-color: #2D2926 !important;
+        color: #FFFFFF !important;
+        border-radius: 0px !important;
+        border: none !important;
+        font-family: 'Georgia', serif !important;
+        letter-spacing: 1px;
+    }
     </style>
     """, unsafe_allow_html=True)
+
+# Zamjena u glavnom UI dijelu:
+st.markdown("<h1 class='luxury-title'>ADORA BEAUTY CONCEPT</h1>", unsafe_allow_html=True)
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
