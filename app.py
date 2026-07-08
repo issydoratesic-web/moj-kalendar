@@ -4,6 +4,10 @@ import os
 import time
 import requests
 
+# --- RESETIRANJE OCJENA (Ovo ce obrisati stare recenzije) ---
+if os.path.exists("ocjene.csv"):
+    os.remove("ocjene.csv")
+
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
@@ -20,10 +24,7 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    try:
-        requests.post(webhook_url, json=data)
-    except:
-        pass
+    requests.post(webhook_url, json=data)
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
@@ -67,43 +68,36 @@ with st.sidebar:
 
 # --- GLAVNI UI ---
 st.title("Rezervacije termina u Adora Beauty Concept-u")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina min 24h prije.</div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina.</div>""", unsafe_allow_html=True)
 
-col_i, col_p = st.columns(2)
-ime = col_i.text_input("Ime:")
-prezime = col_p.text_input("Prezime:")
-kontakt = st.text_input("Kontakt:")
+# --- FORMA ---
+ime = st.text_input("Ime:")
+prezime = st.text_input("Prezime:")
+kontakt = st.text_input("Broj mobitela:")
 usluge_lista = ["Šminkanje - 40€", "Brow lift - 30€"]
-odabrane_usluge = st.multiselect("Usluge:", usluge_lista)
-
+odabrane_usluge = st.multiselect("Odaberite usluge:", usluge_lista)
 if st.button("POTVRDI REZERVACIJU"):
-    if ime and prezime:
-        df = ucitaj_termine()
-        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": "01/01/2026", "Vrijeme": "08:00", "Usluga": ", ".join(odabrane_usluge)}])
-        pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-        posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, "Nova rezervacija")
-        st.success("Zaprimljeno!")
-        time.sleep(1); st.rerun()
+    df = ucitaj_termine()
+    novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": "01/01/2026", "Vrijeme": "08:00", "Usluga": ", ".join(odabrane_usluge)}])
+    pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
+    st.success("Vaš termin je zaprimljen!")
 
 # --- UPRAVLJANJE MOJIM TERMINOM ---
 st.markdown("---")
 st.subheader("👤 Upravljanje mojim terminom i ocjenjivanje")
-ime_p = st.text_input("Upišite ime za pronalazak:")
-if ime_p:
+ime_pretraga = st.text_input("Upišite ime za pronalazak termina:")
+if ime_pretraga:
     df = ucitaj_termine()
-    moji = df[df['Ime'].str.contains(ime_p, case=False, na=False)]
+    moji = df[df['Ime'].str.contains(ime_pretraga, case=False, na=False)]
     for idx, row in moji.iterrows():
-        with st.expander(f"Termin: {row['Ime']} - {row['Datum']}"):
-            if st.button(f"OTKAŽI TERMIN", key=f"otk_{idx}"):
-                posalji_na_discord("❌ Otkazan termin", row['Ime'], row['Usluga'], row['Kontakt'], f"Datum: {row['Datum']}")
+        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} {row['Vrijeme']})"):
+            if st.button(f"OTKAŽI {idx}", key=f"otk_{idx}"):
                 df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
-            
             ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"s{idx}")
             komentar = st.text_input("Komentar:", key=f"c{idx}")
             if st.button("Pošalji ocjenu", key=f"send{idx}"):
                 spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, komentar)
-                posalji_na_discord("⭐ Nova ocjena", row['Ime'], row['Usluga'], str(ocjena), komentar)
-                st.success("Hvala!"); st.rerun()
+                st.rerun()
 
 # --- RECENZIJE ---
 st.markdown("---")
