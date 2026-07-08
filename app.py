@@ -81,10 +81,18 @@ st.subheader("Odabir usluga")
 odabrane_usluge = st.multiselect("Odaberite jednu ili više usluga:", usluge_lista)
 
 broj_osoba = {}
+ukupna_cijena = 0
+
 if odabrane_usluge:
     st.write("Navedite broj osoba za svaku odabranu uslugu:")
     for usluga in odabrane_usluge:
-        broj_osoba[usluga] = st.number_input(f"Broj osoba za: {usluga}", min_value=1, value=1, key=f"num_{usluga}")
+        broj = st.number_input(f"Broj osoba za: {usluga}", min_value=1, value=1, key=f"num_{usluga}")
+        broj_osoba[usluga] = broj
+        try:
+            cijena_po_osobi = int(usluga.split(" - ")[-1].replace("€", ""))
+            ukupna_cijena += cijena_po_osobi * broj
+        except: pass
+    st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 
 st.subheader("Dodatna pitanja")
 novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
@@ -114,7 +122,7 @@ if st.button("POTVRDI REZERVACIJU"):
                 "Kontakt": kontakt, 
                 "Datum": f"{dan}/{mjesec}/{godina}", 
                 "Vrijeme": "08:00", 
-                "Usluga": detalji_usluga, 
+                "Usluga": f"{detalji_usluga} (Ukupno: {ukupna_cijena}€)", 
                 "Novi_klijent": novi_klijent, 
                 "Napomena": napomena, 
                 "Laminacija_DA_NE": lam_da_ne, 
@@ -122,7 +130,7 @@ if st.button("POTVRDI REZERVACIJU"):
             }])
             pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
             
-            posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", detalji_usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
+            posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", f"{detalji_usluga} | Cijena: {ukupna_cijena}€", kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}")
             
             placeholder = st.empty()
             placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
@@ -130,8 +138,7 @@ if st.button("POTVRDI REZERVACIJU"):
             placeholder.empty()
             st.rerun()
         else: st.error("Molimo ispunite obavezna polja.")
-    else:
-        st.warning("Molimo vas da potvrdite da ste pročitali pravila.")
+    else: st.warning("Molimo vas da potvrdite da ste pročitali pravila.")
 
 st.markdown("---")
 st.subheader("👤 Upravljanje mojim terminom")
