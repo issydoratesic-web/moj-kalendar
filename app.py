@@ -9,14 +9,12 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 # --- CSS STILOVI ---
 st.markdown("""
     <style>
-    /* 1. Pozadina stranice */
     .stApp { background-color: #fff0f5 !important; }
 
-    /* 2. SAMO NASLOV - Luksuzni font, bez emojija */
     .simple-luxury-title {
         color: #d63384 !important;
         font-family: 'Georgia', 'Playfair Display', serif !important;
-        font-size: 40px !important;
+        font-size: 35px !important;
         font-weight: 500 !important;
         text-align: center !important;
         letter-spacing: 3px !important;
@@ -25,7 +23,6 @@ st.markdown("""
         margin-bottom: 40px;
     }
 
-    /* 3. POLJA ZA UNOS */
     div[data-baseweb="base-input"], div[data-baseweb="select"] > div, input, textarea {
         background-color: #ffffff !important;
         color: black !important;
@@ -33,17 +30,13 @@ st.markdown("""
         border-radius: 0px !important; 
     }
 
-    /* 4. PADAJUĆI IZBORNICI */
     div[role="listbox"], ul[role="listbox"], li[role="option"] {
         background-color: #fff0f5 !important;
         color: black !important;
     }
     
-    li[role="option"]:hover {
-        background-color: #ffc0cb !important;
-    }
+    li[role="option"]:hover { background-color: #ffc0cb !important; }
 
-    /* 5. GUMBI */
     div.stButton > button {
         background-color: #d63384 !important;
         color: white !important;
@@ -55,8 +48,44 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- NASLOV ---
+# --- FUNKCIJE ---
+def posalji_na_discord(naslov, poruka):
+    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4" 
+    if "TVOJ_DISCORD" in webhook_url: return
+    data = {"embeds": [{"title": naslov, "description": poruka, "color": 16753920}]}
+    try: requests.post(webhook_url, json=data)
+    except: pass
+
+def ucitaj_termine():
+    if os.path.exists("termini.csv"):
+        return pd.read_csv("termini.csv", dtype=str)
+    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Usluga", "Novi_klijent", "Napomena"])
+
+# --- GLAVNI UI ---
 st.markdown("<h1 class='simple-luxury-title'>ADORA BEAUTY CONCEPT</h1>", unsafe_allow_html=True)
 
-# --- OSTATAK APLIKACIJE (OVDJE IDE TVOJ KOD ZA FORMU) ---
-# ... (nastavi s ostatkom koda kao i do sada)
+col1, col2 = st.columns(2)
+ime = col1.text_input("Ime:")
+prezime = col2.text_input("Prezime:")
+kontakt = st.text_input("Kontakt:")
+
+kat = st.selectbox("Odaberite kategoriju:", ["Šminkanje", "Oblikovanje obrva", "Tretmani lica"], index=None)
+
+if kat:
+    usluga = st.selectbox("Usluga:", ["Usluga 1", "Usluga 2"], index=None)
+    if usluga:
+        novi = st.radio("Novi klijent?", ["Da", "Ne"], index=None)
+        napomena = st.text_area("Napomena:")
+        
+        c1, c2, c3 = st.columns(3)
+        dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
+        mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
+        godina = c3.selectbox("Godina:", ["2026", "2027", "2028"])
+        
+        if st.button("POTVRDI REZERVACIJU"):
+            if ime and prezime and kontakt:
+                opis = f"Klijent: {ime} {prezime}\nUsluga: {usluga}\nDatum: {dan}.{mjesec}.{godina}."
+                posalji_na_discord("Nova rezervacija", opis)
+                st.success("Uspješno rezervirano!")
+                time.sleep(2); st.rerun()
+            else: st.error("Ispunite podatke!")
