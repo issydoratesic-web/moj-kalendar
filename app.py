@@ -16,23 +16,30 @@ st.markdown("""
     .stApp { background-color: #fdfbfb; }
     h1, h2, h3 { color: black !important; text-align: center; }
     
-    /* Roza pozadina za polja za unos i izbornike */
+    /* Osnovni izgled izbornika i polja za unos */
     div[data-baseweb="select"] > div, input, textarea {
         background-color: #fff0f5 !important;
         border: 1px solid #ffb6c1 !important;
         border-radius: 10px !important;
         color: black !important;
     }
-    
-    /* Roza pozadina za padajući izbornik (menu) */
-    div[data-baseweb="menu"] {
+
+    /* Roza pozadina i crna slova za otvoreni padajući izbornik */
+    div[role="listbox"], ul[role="listbox"] {
         background-color: #fff0f5 !important;
         color: black !important;
     }
     
-    /* Boja slova u izborniku kada se lebdi iznad opcije */
-    div[role="option"]:hover {
+    /* Boja teksta svake pojedine stavke unutar izbornika */
+    li[role="option"] {
+        background-color: #fff0f5 !important;
+        color: black !important;
+    }
+    
+    /* Hover efekt unutar izbornika */
+    li[role="option"]:hover {
         background-color: #ffc0cb !important;
+        color: black !important;
     }
 
     /* Prilagođeni box */
