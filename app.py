@@ -61,7 +61,7 @@ with st.sidebar:
 
 # --- GLAVNI UI ---
 st.title("✨ Adora Beauty Concept")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju u iznosu 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3 </div>""", unsafe_allow_html=True)
 
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
