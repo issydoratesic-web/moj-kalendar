@@ -26,7 +26,13 @@ def obrisi_termin_po_indexu(index):
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-st.info("⚠️ **Napomena:** Otkazivanje termina najaviti 24h ranije. Za šminkanje akontacija 50%.")
+# --- VRAĆENA NAPOMENA ---
+st.info("""
+⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
+Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
+
+• Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3
+""")
 
 usluge_mapa = {
     "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
