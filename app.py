@@ -18,18 +18,13 @@ def ucitaj_termine():
         return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Novi_klijent", "Napomena", "Laminacija_DA_NE", "Alergije"])
 
-def spremi_termin(ime, kontakt, datum, vrijeme, usluga, novi_klijent, napomena, lam, al):
-    df = ucitaj_termine()
-    novi = pd.DataFrame([{"Ime": ime, "Kontakt": kontakt, "Datum": datum, "Vrijeme": vrijeme, "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam, "Alergije": al}])
-    pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-
 # --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin Panel")
     if 'admin_auth' not in st.session_state: st.session_state.admin_auth = False
     
     if not st.session_state.admin_auth:
-        pwd = st.text_input("Lozinka:", type="password", key="pwd_input")
+        pwd = st.text_input("Lozinka:", type="password")
         if st.button("Prijava"):
             if pwd == "171102": st.session_state.admin_auth = True; st.rerun()
             else: st.error("Pogrešna lozinka!")
@@ -86,7 +81,10 @@ if kat:
         
         if st.button("POTVRDI REZERVACIJU"):
             if ime and prezime and kontakt and novi_klijent:
-                spremi_termin(f"{ime} {prezime}", kontakt, f"{dan}/{mjesec}/{godina}", "08:00", usluga, novi_klijent, napomena, lam_da_ne, alergije)
+                df = ucitaj_termine()
+                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+                pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
+                
                 placeholder = st.empty()
                 placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
                 time.sleep(10)
