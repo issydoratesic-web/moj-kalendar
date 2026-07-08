@@ -106,9 +106,8 @@ if st.button("POTVRDI REZERVACIJU"):
         novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
         posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Vrijeme: {vrijeme}")
-        st.success("Hvala na rezervaciji! Vaš termin je uspješno zaprimljen i poslan na potvrdu. Javit ćemo Vam se u najkraćem mogućem roku putem Instagrama ili WhatsAppa radi potvrde.")
-        time.sleep(5)
-        st.rerun()
+        st.success("Hvala na rezervaciji! Vaš termin je uspješno zaprimljen i poslan na potvrdu.")
+        time.sleep(2); st.rerun()
 
 # --- UPRAVLJANJE MOJIM TERMINOM I OCJENJIVANJE ---
 st.markdown("---")
@@ -129,7 +128,7 @@ if ime_otkaz:
             komentar = st.text_input("Komentar:", key=f"comm{idx}")
             if st.button("Pošalji ocjenu", key=f"send{idx}"):
                 spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, komentar)
-                st.success("Hvala na Vašoj ocjeni i komentaru!")
+                st.success("Hvala na Vašoj ocjeni i komentaru!"); st.rerun()
 
 # --- RECENZIJE KLIJENATA ---
 st.markdown("---")
