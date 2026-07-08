@@ -1,4 +1,9 @@
-import streamlit as st
+import requests # OVO MORA BITI NA VRHU KODA
+
+def posalji_na_discord(poruka):
+    webhook_url = "TVOJ_WEBHOOK_URL_OVDJE" # OVDJE UBIČI SVOJ LINK
+    data = {"content": poruka}
+    requests.post(webhook_url, json=data)import streamlit as st
 import pandas as pd
 import os
 import time
