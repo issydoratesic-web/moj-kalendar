@@ -26,7 +26,16 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         return pd.read_csv("termini.csv", dtype=str)
-    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Novi_klijent", "Napomena", "Laminacija_DA_NE", "Alergije"])
+    # Ažuriraj ovaj dio unutar "POTVRDI REZERVACIJU"
+        novi = pd.DataFrame([{
+            "Ime": f"{ime} {prezime}", 
+            "Kontakt": kontakt, 
+            "Datum": f"{dan}/{mjesec}/{godina}", 
+            "Vrijeme": vrijeme, 
+            "Usluga": ", ".join(odabrane_usluge),
+            "Laminacija": lam_da_ne,       # Novo polje
+            "Alergije": alergije           # Novo polje
+        }])
 
 def spremi_ocjenu(ime, usluga, ocjena, komentar):
     df_ocjene = pd.DataFrame([{"Ime": ime, "Usluga": usluga, "Ocjena": ocjena, "Komentar": komentar}])
