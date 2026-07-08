@@ -6,12 +6,14 @@ import time
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
+# Definiramo usluge i cijene (koristimo rječnik u rječniku)
 usluge_mapa = {
-    "Šminkanje": {"Šminkanje": "40€", "Terensko šminkanje": "50€"},
-    "Obrve": {"Oblikovanje pincetom": "8€", "Oblikovanje i bojanje": "15€", "Brow lift": "30€"},
-    "Tretmani lica": {"Enzimski piling": "25€", "Masaža i piling": "35€"},
-    "Frizure": {"Kratka kosa": "10€", "Duga kosa": "15€", "Punđa": "15€"},
-    "Little Luxe Spa": {"Mini": "50€", "Classic": "70€", "VIP": "100€"}
+    "Šminkanje": {"Šminkanje (40€)": "40€", "Terensko šminkanje (50€)": "50€"},
+    "Obrve": {"Oblikovanje pincetom (8€)": "8€", "Oblikovanje i bojanje (15€)": "15€", "Brow lift (30€)": "30€"},
+    "Tretmani lica": {"Enzimski piling (25€)": "25€", "Masaža i piling (35€)": "35€"},
+    "Frizure": {"Kratka kosa (10€)": "10€", "Duga kosa (15€)": "15€", "Punđa (15€)": "15€"},
+    "Little Luxe Spa": {"Mini (50€)": "50€", "Classic (70€)": "70€", "VIP (100€)": "100€"}
+}
 }
 
 # --- FUNKCIJE ---
@@ -40,8 +42,11 @@ st.subheader("Nova rezervacija")
 ime_input = st.text_input("Unesite PUNO IME I PREZIME:")
 kontakt = st.text_input("Kontakt (IG/Br):")
 kat = st.selectbox("Kategorija:", list(usluge_mapa.keys()))
-usluga = st.selectbox("Usluga:", list(usluge_mapa[kat].keys()))
-cijena = usluge_mapa[kat][usluga]
+# Sada korisnik vidi "Naziv (Cijena)"
+odabrana_usluga_labela = st.selectbox("Usluga:", list(usluge_mapa[kat].keys()))
+
+# Cijena je vrijednost iz rječnika
+cijena = usluge_mapa[kat][odabrana_usluga_labela]
 st.write(f"Cijena: **{cijena}**")
 datum = st.date_input("Odaberite datum:")
 
