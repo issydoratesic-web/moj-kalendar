@@ -66,7 +66,7 @@ st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkaziv
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
 prezime = col_p.text_input("Prezime:")
-kontakt = st.text_input("Kontakt (IG/Br):")
+kontakt = st.text_input("Broj mobitela ili instagram korisničko ime:")
 
 kat = st.selectbox("Odaberite kategoriju:", ["Šminkanje", "Oblikovanje i korekcija obrva", "Tretmani lica", "Frizure", "Little Luxe Spa"], index=None)
 
