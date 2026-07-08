@@ -7,8 +7,8 @@ import requests
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
-def posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {datum_odabir} u {vrijeme}")
-    webhook_url = "https://discord.com/api/webhooks/1524442178896658673/2hu1ajtJxHlG-uOs8o5ticqUcaQtctnT5meKpTbr3bk1DvUnndBBTLBu1S1hBgL7sApo"
+def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
+    webhook_url = "Tvoj_Webhook_URL_ovdje"
     embed = {
         "title": naslov,
         "color": 16753920,
@@ -22,7 +22,6 @@ def posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(o
     data = {"embeds": [embed]}
     try: requests.post(webhook_url, json=data, timeout=5)
     except: pass
-
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         return pd.read_csv("termini.csv", dtype=str)
