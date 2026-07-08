@@ -20,19 +20,19 @@ usluge_mapa = {
         "Blagi mehanički piling - 20€",
         "Parenje toplim ručnikom i masaža uz piling - 35€"
     ],
-    "Kratka kosa": [
-        "Ravnanje kose - 10€", 
-        "Uvijanje kose - 20€", 
-        "Hollywood valovi - 25€", 
-        "Elegantni repovi - 15€"
-    ],
-    "Duga kosa": [
-        "Ravnanje kose - 20€", 
-        "Uvijanje kose - 30€", 
-        "Hollywood valovi - 35€", 
-        "Elegantni repovi - 25€"
+    "Frizure": [
+        "Kratka kosa - Ravnanje - 10€", 
+        "Kratka kosa - Uvijanje - 20€", 
+        "Kratka kosa - Hollywood valovi - 25€", 
+        "Kratka kosa - Elegantni repovi - 15€",
+        "Duga kosa - Ravnanje - 20€", 
+        "Duga kosa - Uvijanje - 30€", 
+        "Duga kosa - Hollywood valovi - 35€", 
+        "Duga kosa - Elegantni repovi - 25€",
+        "Punđa - 15€"
     ],
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
+}
 }
 
 # --- FUNKCIJE ---
