@@ -124,5 +124,7 @@ if ime_otkaz:
         for idx, row in moji.iterrows():
             if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_user_{idx}"):
                 df.drop(idx).to_csv("termini.csv", index=False)
-                st.success("Termin otkazan!"); st.rerun()
+                st.success("Vaš termin je uspješno otkazan!")
+                time.sleep(2)
+                st.rerun()
     else: st.warning("Nije pronađen termin.")
