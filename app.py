@@ -136,17 +136,23 @@ if kat:
 # Otkazivanje
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
-ime_otkaz = st.text_input("Upišite puno ime i prezime za otkazivanje:")
+ime_otkaz = st.text_input("Upišite ime i prezime za otkazivanje:")
 
 if ime_otkaz:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.lower() == ime_otkaz.strip().lower()]
+    
     if not moji.empty:
         for idx, row in moji.iterrows():
-            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})", key=f"btn_{idx}"):
-                obrisi_termin(idx)
-                st.success("Termin uspješno otkazan.")
+            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})", key=idx):
+                posalji_na_discord("Termin otkazan!", row['Ime'], row['Usluga'], row['Kontakt'], row['Datum'], row['Vrijeme'])
+                df.drop(idx).to_csv("termini.csv", index=False)
+                st.success("Termin je uspješno otkazan.")
+                time.sleep(2)
                 st.rerun()
+    else:
+        # Poruka se prikazuje samo ako je nešto upisano, a nije pronađeno
+        st.warning("Nije pronađen termin za to ime.")
     else:
         st.warning("Nije pronađen termin za to ime.")
 
