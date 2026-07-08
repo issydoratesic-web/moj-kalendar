@@ -86,6 +86,18 @@ st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 
 novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
 napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
+# --- DODATNA PITANJA ZA LAMINACIJU ---
+lam_da_ne = "N/A"
+alergije = "N/A"
+
+# Provjeravamo sadrži li odabrana usluga pojam "laminacija" ili "Brow lift"
+if any("Brow lift" in u or "laminacija" in u.lower() for u in odabrane_usluge):
+    st.markdown("### ⚠️ Dodatna pitanja")
+    lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju ili lifting trepavica?", ["Da", "Ne"], index=None)
+    alergije = st.text_input("Imate li poznate alergije na kozmetičke proizvode?")
+
+novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
+napomena = st.text_area("Napomena (osjetljiva koža i sl.):")
 
 c1, c2, c3 = st.columns(3)
 dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
