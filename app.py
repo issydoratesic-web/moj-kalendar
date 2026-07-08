@@ -113,14 +113,29 @@ if ime_otkaz:
     else:
         st.warning("Nije pronađen termin za to ime.")
 
-# Admin
+# --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
-    if st.text_input("Lozinka:", type="password") == "171102":
+    if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
         df = ucitaj_termine()
         st.subheader("Upravljanje terminima")
-        for idx, row in df.iterrows():
-            st.write(f"{row['Ime']} | {row['Datum']} | {row['Vrijeme']}")
-            if st.button(f"Obriši termin", key=f"del_{idx}"):
-                obrisi_termin(idx)
+        
+        # Stvaramo listu opcija za padajući izbornik
+        # Svaka opcija sadrži ime, datum i vrijeme za lakšu identifikaciju
+        opcije = df.apply(lambda x: f"{x['Ime']} {x['Prezime']} | {x['Datum']} | {x['Vrijeme']}", axis=1).tolist()
+        
+        if opcije:
+            odabrani_termin = st.selectbox("Odaberi termin za brisanje:", opcije)
+            
+            if st.button("OBRIŠI ODABRANI"):
+                # Pronalazimo indeks odabranog termina
+                index_za_brisanje = opcije.index(odabrani_termin)
+                
+                # Brišemo iz DataFrame-a
+                df = df.drop(df.index[index_za_brisanje])
+                df.to_csv("termini.csv", index=False)
+                
+                st.success("Termin je obrisan!")
                 st.rerun()
+        else:
+            st.write("Nema rezerviranih termina.")
