@@ -130,3 +130,12 @@ if ime_otkaz:
                 # Dodajemo kratku pauzu i rerun kako bi se recenzija odmah pojavila na dnu
                 time.sleep(1)
                 st.rerun()
+                # --- RECENZIJE KLIJENATA ---
+st.markdown("---")
+st.subheader("🌟 Recenzije naših klijenata")
+df_ocjene = ucitaj_ocjene()
+if not df_ocjene.empty:
+    for _, row in df_ocjene.iterrows():
+        st.markdown(f"""<div class='review-box'><strong>{row['Ime']}</strong> - ⭐ {row['Ocjena']}/5<br><em>Usluga: {row['Usluga']}</em><br>{row['Komentar']}</div>""", unsafe_allow_html=True)
+else:
+    st.info("Još nema javnih recenzija.")
