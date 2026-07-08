@@ -8,7 +8,7 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
-    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4"
+    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4" # OVDJE UBIČI SVOJ URL
     embed = {
         "title": naslov,
         "color": 16753920,
@@ -20,7 +20,10 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    requests.post(webhook_url, json=data)
+    try:
+        requests.post(webhook_url, json=data)
+    except:
+        pass
 
 # --- CSS STILOVI ---
 st.markdown("""
@@ -123,6 +126,8 @@ if ime_otkaz:
     if not moji.empty:
         for idx, row in moji.iterrows():
             if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_user_{idx}"):
+                # Ovdje dodan poziv za notifikaciju otkazivanja
+                posalji_na_discord("❌ Termin otkazan od strane klijenta", row['Ime'], row['Usluga'], row['Kontakt'], "Klijent je sam otkazao termin.")
                 df.drop(idx).to_csv("termini.csv", index=False)
                 st.success("Termin otkazan!"); st.rerun()
     else: st.warning("Nije pronađen termin.")
