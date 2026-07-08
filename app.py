@@ -103,16 +103,25 @@ if st.button("POTVRDI REZERVACIJU"):
         posalji_na_discord("Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
         st.success("Hvala na rezervaciji!"); st.rerun()
 
-# --- UPRAVLJANJE MOJIM TERMINOM ---
+# --- UPRAVLJANJE MOJIM TERMINOM I OCJENJIVANJE ---
 st.markdown("---")
-st.subheader("👤 Upravljanje mojim terminom")
+st.subheader("👤 Upravljanje mojim terminom i ocjenjivanje")
 ime_otkaz = st.text_input("Upišite ime za pronalazak:")
 if ime_otkaz:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.contains(ime_otkaz, case=False, na=False)]
     for idx, row in moji.iterrows():
-        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']})"):
-            if st.button(f"Otkazi termin {idx}", key=f"del_{idx}"):
-                # Obavijest klijentu o otkazivanju
-                posalji_na_discord("Termin otkazao Klijent", str(row['Ime']), str(row['Usluga']), str(row['Kontakt']), f"Datum: {row['Datum']} u {row['Vrijeme']}")
+        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
+            if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
+                # Poziv funkcije za obavijest na Discord prije brisanja
+                posalji_na_discord("❌ Otkazan termin!", row['Ime'], row['Usluga'], row['Kontakt'], f"Datum: {row['Datum']} u {row['Vrijeme']}")
                 df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
+            n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
+            n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
+            if st.button("Spremi izmjene", key=f"save{idx}"):
+                df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"; df.at[idx, 'Vrijeme'] = n_vr; df.to_csv("termini.csv", index=False); st.rerun()
+            ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate{idx}")
+            komentar = st.text_input("Komentar:", key=f"comm{idx}")
+            if st.button("Pošalji ocjenu", key=f"send{idx}"):
+                spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, komentar)
+                st.success("Hvala na Vašoj ocjeni i komentaru!")
