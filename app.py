@@ -61,6 +61,12 @@ with st.sidebar:
                 st.write(f"Usluga: {row['Usluga']}")
                 if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_admin_{idx}"):
                     df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
+                    st.subheader("Upravljanje recenzijama")
+        if st.button("OBRIŠI SVE RECENZIJE"):
+            if os.path.exists("ocjene.csv"):
+                os.remove("ocjene.csv")
+                st.success("Sve recenzije su obrisane!")
+                st.rerun()
 
 # --- GLAVNI UI ---
 st.title("Rezervacije termina u Adora Beauty Concept-u")
