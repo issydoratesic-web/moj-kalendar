@@ -100,11 +100,20 @@ if any("Brow lift" in u or "laminacija" in u.lower() for u in odabrane_usluge):
 novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None, key="novi_q")
 napomena = st.text_area("Napomena (osjetljiva koža i sl.):", key="nap_q")
 
+# --- LOGIKA DATUMA I VREMENA ---
 c1, c2, c3 = st.columns(3)
 dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
 mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
 godina = c3.selectbox("Godina:", ["2026", "2027", "2028"])
-vrijeme = st.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 21)])
+
+# Logika za zauzete termine
+datum_odabir = f"{dan}/{mjesec}/{godina}"
+df_svi = ucitaj_termine()
+zauzeta_vremena = df_svi[df_svi['Datum'] == datum_odabir]['Vrijeme'].tolist()
+dostupna_vremena = [v for v in [f"{h:02d}:00" for h in range(8, 21)] if v not in zauzeta_vremena]
+
+st.subheader("Vrijeme:")
+vrijeme = st.selectbox("Odaberite slobodan termin:", dostupna_vremena)
 
 potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila.")
 
