@@ -8,13 +8,25 @@ import requests
 st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
 
 # --- FUNKCIJE ---
-def posalji_na_discord(tekst):
+def posalji_na_discord(naslov, ime, usluga, kontakt, datum, vrijeme):
     webhook_url = st.secrets.get("DISCORD_WEBHOOK")
-    if webhook_url:
-        try:
-            requests.post(webhook_url, json={"content": tekst})
-        except:
-            pass
+    if not webhook_url: return
+    
+    embed = {
+        "title": f"🔔 {naslov}",
+        "color": 3066993, 
+        "fields": [
+            {"name": "👤 Klijent", "value": ime, "inline": False},
+            {"name": "✂️ Usluga", "value": usluga, "inline": False},
+            {"name": "📱 Kontakt", "value": kontakt, "inline": False},
+            {"name": "📅 Datum", "value": datum, "inline": True},
+            {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}
+        ]
+    }
+    try:
+        requests.post(webhook_url, json={"embeds": [embed]})
+    except:
+        pass
 
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
@@ -26,14 +38,14 @@ def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga):
     novi = pd.DataFrame([{"Ime": ime_puno, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga}])
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
-    posalji_na_discord(f"🔔 **Nova rezervacija!**\nKlijent: {ime_puno}\nUsluga: {usluga}\nDatum: {dat_str} u {vrijeme}")
+    posalji_na_discord("Nova rezervacija!", ime_puno, usluga, kontakt, dat_str, vrijeme)
 
 def obrisi_termin_po_indexu(index):
     df = ucitaj_termine()
     termin = df.loc[index]
+    posalji_na_discord("Termin otkazan!", termin['Ime'], termin['Usluga'], termin['Kontakt'], termin['Datum'], termin['Vrijeme'])
     df = df.drop(index)
     df.to_csv("termini.csv", index=False)
-    posalji_na_discord(f"❌ **Termin otkazan!**\nKlijent: {termin['Ime']}\nUsluga: {termin['Usluga']}\nDatum: {termin['Datum']} u {termin['Vrijeme']}")
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
@@ -41,6 +53,7 @@ st.title("✨ Adora Beauty Concept")
 st.info("""
 ⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
 Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
+
 • Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3
 """)
 
@@ -52,6 +65,7 @@ usluge_mapa = {
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
+# Unos klijenta
 col_i, col_p = st.columns(2)
 with col_i: ime = st.text_input("Ime:")
 with col_p: prezime = st.text_input("Prezime:")
@@ -79,6 +93,7 @@ if kat:
                 time.sleep(1); st.rerun()
             else: st.error("Molimo ispunite sve podatke.")
 
+# --- OTKAZIVANJE TERMINA ---
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
 ime_otkaz = st.text_input("Upišite puno ime i prezime za otkaz:")
@@ -90,6 +105,7 @@ if ime_otkaz:
             obrisi_termin_po_indexu(idx)
             st.rerun()
 
+# --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
     if st.text_input("Lozinka:", type="password") == "171102":
