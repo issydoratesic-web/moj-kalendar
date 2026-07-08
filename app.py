@@ -22,7 +22,7 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
     data = {"embeds": [embed]}
     requests.post(webhook_url, json=data)
 
-# --- FUNKCIJE ---
+# --- OSTALE FUNKCIJE ---
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         return pd.read_csv("termini.csv", dtype=str)
@@ -60,12 +60,13 @@ with st.sidebar:
             with st.expander(f"{row['Ime']} - {row['Datum']} ({row['Vrijeme']})"):
                 st.write(f"Usluga: {row['Usluga']}")
                 if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
-                    posalji_na_discord("Termin otkazan (Admin)", row['Ime'], row['Usluga'], row['Kontakt'], f"Termin {row['Datum']} u {row['Vrijeme']} je obrisan.")
+                    # Obavijest adminu
+                    posalji_na_discord("Termin obrisao Admin", str(row['Ime']), str(row['Usluga']), str(row['Kontakt']), f"Termin: {row['Datum']} u {row['Vrijeme']}")
                     df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
 
 # --- GLAVNI UI ---
 st.title("Rezervacije termina u Adora Beauty Concept-u")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
 
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
@@ -77,18 +78,14 @@ odabrane_usluge = st.multiselect("Odaberite jednu ili više usluga:", usluge_lis
 
 ukupna_cijena = 0
 for usluga in odabrane_usluge:
-    cijena_po_osobi = int(usluga.split(" - ")[-1].replace("€", ""))
-    ukupna_cijena += cijena_po_osobi
+    try:
+        cijena_po_osobi = int(usluga.split(" - ")[-1].replace("€", ""))
+        ukupna_cijena += cijena_po_osobi
+    except: continue
 st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 
 novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
 napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
-
-lam_da_ne, alergije = "N/A", "N/A"
-if any("Brow lift" in u for u in odabrane_usluge):
-    st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
-    lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju?", ["Da", "Ne"], index=None)
-    alergije = st.text_input("Imate li poznate alergije?")
 
 c1, c2, c3 = st.columns(3)
 dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
@@ -96,24 +93,26 @@ mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
 godina = c3.selectbox("Godina:", ["2026", "2027", "2028"])
 vrijeme = st.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 21)])
 
-potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila otkazivanja i uvjete akontacije.")
+potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila.")
 
 if st.button("POTVRDI REZERVACIJU"):
     if potvrda and ime and prezime and kontakt:
         df = ucitaj_termine()
-        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": "N/A", "Alergije": "N/A"}])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-        posalji_na_discord("Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Vrijeme: {dan}/{mjesec}/{godina} u {vrijeme}")
-        st.success("Hvala na rezervaciji! Vaš termin je uspješno zaprimljen."); time.sleep(1); st.rerun()
+        posalji_na_discord("Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
+        st.success("Hvala na rezervaciji!"); st.rerun()
 
 # --- UPRAVLJANJE MOJIM TERMINOM ---
 st.markdown("---")
-st.subheader("👤 Upravljanje mojim terminom i ocjenjivanje")
+st.subheader("👤 Upravljanje mojim terminom")
 ime_otkaz = st.text_input("Upišite ime za pronalazak:")
 if ime_otkaz:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.contains(ime_otkaz, case=False, na=False)]
     for idx, row in moji.iterrows():
-        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
-            if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
-                posalji_na_discord("Termin otkazan (Klijent)", row['I
+        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']})"):
+            if st.button(f"Otkazi termin {idx}", key=f"del_{idx}"):
+                # Obavijest klijentu o otkazivanju
+                posalji_na_discord("Termin otkazao Klijent", str(row['Ime']), str(row['Usluga']), str(row['Kontakt']), f"Datum: {row['Datum']} u {row['Vrijeme']}")
+                df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
