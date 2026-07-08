@@ -9,28 +9,32 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 # --- CSS STILOVI ---
 st.markdown("""
     <style>
-    /* Globalno postavljanje crne boje za sav tekst */
-    html, body, [class*="st-"] {
-        color: black !important;
-    }
-    .stApp { background-color: #fdfbfb; }
-    h1, h2, h3 { color: black !important; text-align: center; }
-    
-    /* Osnovni izgled izbornika i polja za unos */
-    div[data-baseweb="select"] > div, input, textarea {
+    /* 1. Postavi pozadinu aplikacije */
+    .stApp { background-color: #fdfbfb !important; }
+
+    /* 2. SVA POLJA ZA UNOS (Input, Textarea, Selectbox) - Roza pozadina i crna slova */
+    div[data-baseweb="base-input"], 
+    div[data-baseweb="select"] > div, 
+    input, 
+    textarea, 
+    div[role="combobox"] {
         background-color: #fff0f5 !important;
+        color: black !important;
         border: 1px solid #ffb6c1 !important;
         border-radius: 10px !important;
+    }
+
+    /* 3. OSIGURAJ DA JE TEKST U POLJIMA CRN */
+    input, textarea, div[role="combobox"] div, p {
         color: black !important;
     }
 
-    /* Roza pozadina i crna slova za otvoreni padajući izbornik */
+    /* 4. OTVORENI PADAJUĆI IZBORNICI (Ono što je bilo sivo) */
     div[role="listbox"], ul[role="listbox"] {
         background-color: #fff0f5 !important;
         color: black !important;
     }
     
-    /* Boja teksta svake pojedine stavke unutar izbornika */
     li[role="option"] {
         background-color: #fff0f5 !important;
         color: black !important;
@@ -39,27 +43,28 @@ st.markdown("""
     /* Hover efekt unutar izbornika */
     li[role="option"]:hover {
         background-color: #ffc0cb !important;
+    }
+
+    /* 5. NASLOVI I TEKST */
+    h1, h2, h3, label, p {
         color: black !important;
     }
 
-    /* Prilagođeni box */
+    /* 6. PRILAGOĐENI BOX */
     .custom-box { 
         background-color: #fff0f5; 
         padding: 20px; 
         border-radius: 15px; 
         border-left: 10px solid #d63384; 
         color: black !important;
-        margin-bottom: 20px;
     }
     
-    /* Stil gumba */
+    /* 7. GUMBI */
     div.stButton > button {
-        background-color: #d63384;
+        background-color: #d63384 !important;
         color: white !important;
         border-radius: 10px;
-        width: 100%;
         border: none;
-        padding: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
