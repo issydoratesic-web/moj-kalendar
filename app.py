@@ -99,20 +99,25 @@ if kat:
         mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
         godina = c3.selectbox("Godina:", [str(i) for i in range(2026, 2031)])
         
+        potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila otkazivanja i uvjete akontacije.")
+        
         if st.button("POTVRDI REZERVACIJU"):
-            if ime and prezime and kontakt and novi_klijent:
-                df = ucitaj_termine()
-                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
-                pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-                
-                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
-                
-                placeholder = st.empty()
-                placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
-                time.sleep(10)
-                placeholder.empty()
-                st.rerun()
-            else: st.error("Molimo ispunite obavezna polja.")
+            if potvrda:
+                if ime and prezime and kontakt and novi_klijent:
+                    df = ucitaj_termine()
+                    novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+                    pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
+                    
+                    posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
+                    
+                    placeholder = st.empty()
+                    placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
+                    time.sleep(10)
+                    placeholder.empty()
+                    st.rerun()
+                else: st.error("Molimo ispunite obavezna polja.")
+            else:
+                st.warning("Molimo vas da potvrdite da ste pročitali pravila otkazivanja kako biste mogli nastaviti.")
 
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
