@@ -26,7 +26,7 @@ def obrisi_termin_po_indexu(index):
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
 
-# --- VRAĆENA NAPOMENA ---
+# Napomena
 st.info("""
 ⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
 Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
@@ -70,9 +70,9 @@ if kat:
                 time.sleep(1); st.rerun()
             else: st.error("Molimo ispunite sve podatke.")
 
-# --- KLIJENTSKO OTKAZIVANJE ---
+# --- OTKAZIVANJE TERMINA ---
 st.markdown("---")
-st.subheader("👤 Otkazivanje za klijente")
+st.subheader("👤 Otkazivanje termina")
 ime_otkaz = st.text_input("Upišite puno ime i prezime za otkaz:")
 if ime_otkaz:
     df = ucitaj_termine()
