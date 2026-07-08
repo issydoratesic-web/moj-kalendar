@@ -125,8 +125,9 @@ if st.button("POTVRDI REZERVACIJU"):
             posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", detalji_usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
             
             placeholder = st.empty()
-            placeholder.success("Hvala na rezervaciji! Termin je zaprimljen.")
+            placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
             time.sleep(5)
+            placeholder.empty()
             st.rerun()
         else: st.error("Molimo ispunite obavezna polja.")
     else:
