@@ -87,7 +87,8 @@ st.info("""
 ⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
 Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
 
-• Prilikom zakazivanja termina za šminkanje potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3
+• Prilikom zakazivanja termina za šminkanje potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3 
+uz opis plaćanja: akontacija za termin (vaš datum).
 """)
 
 # Unos
