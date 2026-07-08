@@ -20,11 +20,10 @@ def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga, kod):
     df = pd.concat([df, novi], ignore_index=True)
     df.to_csv("termini.csv", index=False)
 
-def obrisi_termin(ime, dat_str, vrijeme):
+def obrisi_termin_po_kodu(kod_za_brisanje):
     df = ucitaj_termine()
-    mask = (df['Ime'].str.lower() == ime.strip().lower()) & (df['Datum'] == dat_str) & (df['Vrijeme'] == vrijeme)
-    df = df[~mask]
-    df.to_csv("termini.csv", index=False)
+    novi_df = df[df['Kod'] != kod_za_brisanje]
+    novi_df.to_csv("termini.csv", index=False)
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
@@ -78,21 +77,27 @@ if kat:
                 ime_puno = f"{ime.strip()} {prezime.strip()}"
                 kod = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
                 spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga, kod)
-                st.success(f"✅ Rezervacija potvrđena! Kod: {kod}")
-                time_module.sleep(2)
+                st.success(f"✅ Rezervacija potvrđena! Tvoj kod je: **{kod}** (Sačuvaj ga za otkazivanje)")
+                time_module.sleep(3)
                 st.rerun()
 
 st.markdown("---")
 st.subheader("🔎 Provjera i otkazivanje")
-ime_pretraga = st.text_input("Ime i Prezime za provjeru:")
+ime_pretraga = st.text_input("Upiši Ime i Prezime za provjeru termina:")
 if ime_pretraga:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.lower() == ime_pretraga.strip().lower()]
-    for idx, row in moji.iterrows():
-        st.write(f"Termin: {row['Usluga']} | Datum: {row['Datum']} | Vrijeme: {row['Vrijeme']}")
-        if st.button(f"❌ Otkazi {row['Vrijeme']}", key=f"b{idx}"):
-            obrisi_termin(row['Ime'], row['Datum'], row['Vrijeme'])
-            st.rerun()
+    if not moji.empty:
+        for idx, row in moji.iterrows():
+            st.write(f"---")
+            st.write(f"**Usluga:** {row['Usluga']} | **Datum:** {row['Datum']} | **Vrijeme:** {row['Vrijeme']}")
+            st.write(f"**Kod rezervacije:** `{row['Kod']}`")
+            if st.button(f"❌ Otkazi termin {row['Kod']}", key=f"b{idx}"):
+                obrisi_termin_po_kodu(row['Kod'])
+                st.success("Termin otkazan!")
+                st.rerun()
+    else:
+        st.warning("Nema pronađenih termina za to ime.")
 
 with st.sidebar:
     st.header("🔐 Admin")
