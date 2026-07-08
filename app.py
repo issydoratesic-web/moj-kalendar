@@ -65,8 +65,6 @@ with st.sidebar:
 
 # --- GLAVNI UI ---
 st.title("Rezervacije termina u Adora Beauty Concept-u")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong> Otkazivanje min 24h ranije. Akontacija 50% za šminkanje (IBAN: HR03 2402 0061 1406 1395 3).</div>""", unsafe_allow_html=True)
-
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
 prezime = col_p.text_input("Prezime:")
@@ -94,4 +92,23 @@ df_termini = ucitaj_termine()
 dostupni_sati = []
 for h in range(8, 21):
     moguce = True
-    for i in range(tra
+    for i in range(trajanje):
+        if (h + i) >= 20 or f"{h+i:02d}:00" in df_termini[df_termini['Datum'] == datum_str]['Vrijeme'].values:
+            moguce = False
+            break
+    if moguce: dostupni_sati.append(f"{h:02d}:00")
+
+odabrano_vrijeme = st.selectbox("Odaberite slobodan termin:", dostupni_sati if dostupni_sati else ["Nema slobodnih termina"])
+novi_klijent = st.radio("Novi klijent?", ["Da", "Ne"], index=None)
+napomena = st.text_area("Napomena:")
+
+if st.button("POTVRDI REZERVACIJU"):
+    if odabrano_vrijeme != "Nema slobodnih termina" and ime and kontakt:
+        df = ucitaj_termine()
+        for i in range(trajanje):
+            vrijeme_i = f"{int(odabrano_vrijeme[:2]) + i:02d}:00"
+            df = pd.concat([df, pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": datum_str, "Vrijeme": vrijeme_i, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena}])], ignore_index=True)
+        df.to_csv("termini.csv", index=False)
+        posalji_na_discord("🔔 Nova rezervacija", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {datum_str} u {odabrano_vrijeme}")
+        st.success("Rezervacija uspješna!"); time.sleep(2); st.rerun()
+    else: st.error("Greška ili termin nedostupan.")
