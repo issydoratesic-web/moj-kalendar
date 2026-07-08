@@ -7,9 +7,19 @@ import requests
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
-def posalji_na_discord(poruka):
+def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
     webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4"
-    data = {"content": poruka}
+    embed = {
+        "title": naslov,
+        "color": 16753920,
+        "fields": [
+            {"name": "👤 Klijent", "value": ime, "inline": False},
+            {"name": "✂️ Usluga", "value": usluga, "inline": False},
+            {"name": "📱 Kontakt", "value": kontakt, "inline": False},
+            {"name": "📝 Detalji", "value": detalji, "inline": False}
+        ]
+    }
+    data = {"embeds": [embed]}
     requests.post(webhook_url, json=data)
 
 # --- CSS STILOVI ---
@@ -44,10 +54,9 @@ with st.sidebar:
                 st.write(f"Usluga: {row['Usluga']}")
                 st.write(f"Kontakt: {row['Kontakt']}")
                 if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
-                    posalji_na_discord(f"Termin otkazan za: {row['Ime']}")
+                    posalji_na_discord("❌ Termin otkazan", row['Ime'], row['Usluga'], row['Kontakt'], "Termin je uklonjen iz sustava.")
                     df.drop(idx).to_csv("termini.csv", index=False)
-                    st.success("Obrisano!")
-                    st.rerun()
+                    st.success("Obrisano!"); st.rerun()
         if st.download_button("Preuzmi CSV", df.to_csv(index=False), "termini.csv"): st.success("Pokrenuto!")
 
 # --- GLAVNI UI ---
@@ -93,7 +102,7 @@ if kat:
                 novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
                 pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
                 
-                posalji_na_discord(f"Novi termin: {ime} {prezime} - {usluga} - {kontakt}")
+                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Lam: {lam_da_ne}, Aler: {alergije}")
                 
                 placeholder = st.empty()
                 placeholder.success("Hvala na rezervaciji! Termin je zaprimljen.")
