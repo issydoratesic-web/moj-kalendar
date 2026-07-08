@@ -79,8 +79,20 @@ if kat:
         if st.button("POTVRDI REZERVACIJU"):
             if ime and prezime and kontakt and novi_klijent:
                 spremi_termin(f"{ime} {prezime}", kontakt, f"{dan}/{mjesec}/{godina}", "08:00", usluga, novi_klijent, napomena, lam_da_ne, alergije)
-                st.success("Rezervacija potvrđena!"); st.rerun()
-            else: st.error("Molimo ispunite obavezna polja.")
+                
+                # Kreiramo kontejner za poruku
+                placeholder = st.empty()
+                # Prikazujemo željenu poruku
+                placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
+                
+                # Čekamo 10 sekundi
+                time.sleep(10)
+                
+                # Brišemo poruku i osvježavamo stranicu
+                placeholder.empty()
+                st.rerun()
+            else: 
+                st.error("Molimo ispunite obavezna polja.")
 
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
