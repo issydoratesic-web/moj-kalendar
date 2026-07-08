@@ -1,14 +1,16 @@
-import requests # OVO MORA BITI NA VRHU KODA
-
-def posalji_na_discord(poruka):
-    webhook_url = "TVOJ_WEBHOOK_URL_OVDJE" # OVDJE UBIČI SVOJ LINK
-    data = {"content": poruka}
-    requests.post(webhook_url, json=data)import streamlit as st
+import streamlit as st
 import pandas as pd
 import os
 import time
+import requests
 
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
+
+# --- FUNKCIJA ZA DISCORD ---
+def posalji_na_discord(poruka):
+    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4"
+    data = {"content": poruka}
+    requests.post(webhook_url, json=data)
 
 # --- CSS STILOVI ---
 st.markdown("""
@@ -34,7 +36,7 @@ with st.sidebar:
             if pwd == "171102": st.session_state.admin_auth = True; st.rerun()
             else: st.error("Pogrešna lozinka!")
     else:
-        if st.button("Odjava"): st.session_state.admin_auth = False; st.rerun()
+        if st.button("Odjava", key="logout_btn"): st.session_state.admin_auth = False; st.rerun()
         st.subheader("Upravljanje terminima")
         df = ucitaj_termine()
         for idx, row in df.iterrows():
@@ -42,6 +44,7 @@ with st.sidebar:
                 st.write(f"Usluga: {row['Usluga']}")
                 st.write(f"Kontakt: {row['Kontakt']}")
                 if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
+                    posalji_na_discord(f"Termin otkazan za: {row['Ime']}")
                     df.drop(idx).to_csv("termini.csv", index=False)
                     st.success("Obrisano!")
                     st.rerun()
@@ -90,9 +93,11 @@ if kat:
                 novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
                 pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
                 
+                posalji_na_discord(f"Novi termin: {ime} {prezime} - {usluga} - {kontakt}")
+                
                 placeholder = st.empty()
-                placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
-                time.sleep(10)
+                placeholder.success("Hvala na rezervaciji! Termin je zaprimljen.")
+                time.sleep(5)
                 placeholder.empty()
                 st.rerun()
             else: st.error("Molimo ispunite obavezna polja.")
@@ -105,6 +110,7 @@ if ime_otkaz:
     moji = df[df['Ime'].str.lower() == ime_otkaz.strip().lower()]
     if not moji.empty:
         for idx, row in moji.iterrows():
-            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_{idx}"):
-                df.drop(idx).to_csv("termini.csv", index=False); st.success("Termin otkazan!"); st.rerun()
+            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_user_{idx}"):
+                df.drop(idx).to_csv("termini.csv", index=False)
+                st.success("Termin otkazan!"); st.rerun()
     else: st.warning("Nije pronađen termin.")
