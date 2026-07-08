@@ -61,7 +61,7 @@ with st.sidebar:
 
 # --- GLAVNI UI ---
 st.title("✨ Adora Beauty Concept")
-st.markdown("""<div class='custom-box'><strong>Napomena: (alergije, osjetljiva koža)</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
 
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
@@ -86,7 +86,7 @@ if kat:
     if usluga:
         st.subheader("Dodatna pitanja")
         novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-        napomena = st.text_area("Napomena:")
+        napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
         
         lam_da_ne, alergije = "N/A", "N/A"
         if "Brow lift" in usluga:
@@ -105,7 +105,7 @@ if kat:
                 novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
                 pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
                 
-                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Lam: {lam_da_ne}, Aler: {alergije}")
+                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
                 
                 placeholder = st.empty()
                 placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
