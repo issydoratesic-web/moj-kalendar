@@ -2,42 +2,18 @@ import streamlit as st
 import pandas as pd
 import os
 import time
-import requests
 
-st.set_page_config(page_title="Adora Beauty Concept", page_icon="✨", layout="centered")
-
-# --- KONFIGURACIJA ---
-usluge_mapa = {
-    "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
-    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
-    "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
-    "Frizure": ["Kratka kosa - Ravnanje - 10€", "Kratka kosa - Uvijanje - 20€", "Kratka kosa - Hollywood valovi - 25€", "Kratka kosa - Elegantni repovi - 15€", "Duga kosa - Ravnanje - 20€", "Duga kosa - Uvijanje - 30€", "Duga kosa - Hollywood valovi - 35€", "Duga kosa - Elegantni repovi - 25€", "Punđa - 15€"],
-    "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
-}
+# Konfiguracija stranice
+st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
     kolone = ["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Novi_klijent", "Napomena", "Laminacija_DA_NE", "Alergije"]
     if os.path.exists("termini.csv"):
-        try: return pd.read_csv("termini.csv", dtype=str)
-        except: return pd.DataFrame(columns=kolone)
+        return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=kolone)
 
-def posalji_na_discord(naslov, ime, usluga, kontakt, datum, vrijeme, extra=""):
-    webhook_url = st.secrets.get("DISCORD_WEBHOOK")
-    if not webhook_url: return
-    embed = {"title": f"🔔 {naslov}", "color": 3066993, "fields": [
-        {"name": "👤 Klijent", "value": ime, "inline": False},
-        {"name": "✂️ Usluga", "value": usluga, "inline": False},
-        {"name": "📱 Kontakt", "value": kontakt, "inline": False},
-        {"name": "📅 Datum", "value": datum, "inline": True},
-        {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True},
-        {"name": "📝 Detalji", "value": extra, "inline": False}
-    ]}
-    try: requests.post(webhook_url, json={"embeds": [embed]})
-    except: pass
-
-# --- ADMIN PANEL (SIDEBAR) ---
+# --- ADMIN PANEL U SIDEBARU ---
 with st.sidebar:
     st.header("🔐 Admin Panel")
     if 'admin_auth' not in st.session_state: st.session_state.admin_auth = False
@@ -53,8 +29,8 @@ with st.sidebar:
         df = ucitaj_termine()
         for idx, row in df.iterrows():
             with st.expander(f"{row['Ime']} - {row['Datum']}"):
-                st.write(f"**Usluga:** {row['Usluga']}")
-                if st.button(f"OBRIŠI TERMIN", key=f"del_{idx}"):
+                st.write(f"Usluga: {row['Usluga']}")
+                if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
                     df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
 
 # --- GLAVNI UI ---
@@ -63,9 +39,16 @@ col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
 prezime = col_p.text_input("Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
-kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
+kat = st.selectbox("Odaberite kategoriju:", ["Šminkanje", "Oblikovanje i korekcija obrva", "Tretmani lica", "Frizure", "Little Luxe Spa"], index=None)
 
 if kat:
+    usluge_mapa = {
+        "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
+        "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€"],
+        "Tretmani lica": ["Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€"],
+        "Frizure": ["Kratka kosa - Ravnanje - 10€", "Kratka kosa - Uvijanje - 20€", "Kratka kosa - Hollywood valovi - 25€", "Kratka kosa - Elegantni repovi - 15€", "Duga kosa - Ravnanje - 20€", "Duga kosa - Uvijanje - 30€", "Duga kosa - Hollywood valovi - 35€", "Duga kosa - Elegantni repovi - 25€", "Punđa - 15€"],
+        "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
+    }
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
     if usluga:
         st.subheader("Dodatna pitanja")
@@ -74,7 +57,6 @@ if kat:
         
         lam, aler = "N/A", "N/A"
         if "Brow lift" in usluga:
-            st.markdown("### ⚠️ Za laminaciju")
             lam = st.radio("Laminacija u zadnjih 6 tjedana?", ["Da", "Ne"], index=None)
             aler = st.text_input("Alergije:")
 
@@ -85,22 +67,21 @@ if kat:
         vrijeme = st.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 21)])
 
         if st.button("POTVRDI REZERVACIJU"):
-            if ime and prezime and kontakt and novi_klijent:
-                df = ucitaj_termine()
-                novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam, "Alergije": aler}])
-                pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-                posalji_na_discord("Rezervacija", f"{ime} {prezime}", usluga, kontakt, f"{dan}/{mjesec}/{godina}", vrijeme)
-                st.success("Rezervacija potvrđena!"); time.sleep(1); st.rerun()
-            else: st.error("Ispunite obavezna polja.")
+            df = ucitaj_termine()
+            novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam, "Alergije": aler}])
+            pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
+            st.success("Rezervacija potvrđena!"); time.sleep(1); st.rerun()
 
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
 ime_otkaz = st.text_input("Upišite ime za otkazivanje:")
 if ime_otkaz:
     df = ucitaj_termine()
-    moji = df[df['Ime'].str.contains(ime_otkaz, case=False, na=False)]
+    # Tražimo podudaranje (case insensitive)
+    maska = df['Ime'].str.contains(ime_otkaz, case=False, na=False)
+    moji = df[maska]
     if not moji.empty:
         for idx, row in moji.iterrows():
-            if st.button(f"Otkazi: {row['Ime']} - {row['Usluga']} ({row['Datum']})", key=f"c_{idx}"):
-                df.drop(idx).to_csv("termini.csv", index=False); st.success("Otkazano!"); st.rerun()
-    else: st.warning("Nije pronađen termin.")
+            if st.button(f"Otkazi: {row['Ime']} - {row['Usluga']}", key=f"c_{idx}"):
+                df.drop(idx).to_csv("termini.csv", index=False); st.success("Termin obrisan!"); st.rerun()
+    else: st.warning("Nije pronađen termin. Pazi na razmake u imenu!")
