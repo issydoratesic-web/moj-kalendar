@@ -71,19 +71,28 @@ usluge_mapa = {
 
 kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
+# ... (nakon što ste odabrali kategoriju i uslugu)
 if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
+    
+    # OVO JE KLJUČNO: Provjerite postoji li usluga prije korištenja
     if usluga:
         st.subheader("Dodatna pitanja")
         novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-        napomena = st.text_area("Napomena:")
+        napomena = st.text_area("Napomena (stil, inspiracija...):")
         
-        c1, c2, c3 = st.columns(3)
-        dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
-        mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
-        godina = c3.selectbox("Godina:", ["2026", "2027"])
-        vrijeme = st.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 21)])
+        # Postavljanje zadanih vrijednosti
+        lam_da_ne = "N/A"
+        alergije = "N/A"
+        
+        # Vraćeni odjeljak za laminaciju
+        if "Brow lift" in usluga:
+            st.markdown("---")
+            st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
+            lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju ili lifting trepavica?", ["Da", "Ne"], index=None)
+            alergije = st.text_input("Imate li poznate alergije na kozmetičke proizvode?")
 
+        # Ostatak forme (datumi, vrijeme, gumb za potvrdu) ostaje isti...
         if st.button("POTVRDI REZERVACIJU"):
             if ime and prezime and kontakt and novi_klijent:
                 df = ucitaj_termine()
