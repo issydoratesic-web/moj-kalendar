@@ -150,4 +150,20 @@ if ime_otkaz:
                     df_final = ucitaj_termine()
                     df_final.drop(idx).to_csv("termini.csv", index=False)
                     st.success("Vaš termin je uspješno otkazan!"); st.rerun()
+                
+                if st.button("Izmjeni datum", key=f"edit_btn_{idx}"):
+                    st.session_state[f"edit_mode_{idx}"] = True
+                
+                if st.session_state.get(f"edit_mode_{idx}", False):
+                    n_dan = st.selectbox("Novi dan:", [f"{i:02d}" for i in range(1, 32)], key=f"d_{idx}")
+                    n_mjesec = st.selectbox("Novi mjesec:", [f"{i:02d}" for i in range(1, 13)], key=f"m_{idx}")
+                    n_godina = st.selectbox("Nova godina:", [str(i) for i in range(2026, 2031)], key=f"g_{idx}")
+                    
+                    if st.button("Spremi novi datum", key=f"save_{idx}"):
+                        df_final = ucitaj_termine()
+                        df_final.at[idx, 'Datum'] = f"{n_dan}/{n_mjesec}/{n_godina}"
+                        df_final.to_csv("termini.csv", index=False)
+                        st.success("Datum uspješno izmijenjen!")
+                        st.session_state[f"edit_mode_{idx}"] = False
+                        st.rerun()
     else: st.warning("Nije pronađen termin.")
