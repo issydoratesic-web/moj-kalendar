@@ -80,9 +80,12 @@ def obrisi_termin(index):
         return True
     return False
 
-# --- UI ---
-st.title("✨ Adora Beauty Concept")
-
+# Moderni naslov
+st.markdown("""
+    <h1 style='text-align: center; color: #FFFFFF; font-family: sans-serif; letter-spacing: 1px; padding-bottom: 20px;'>
+        ADORA BEAUTY CONCEPT
+    </h1>
+""", unsafe_allow_html=True)
 st.info("""
 ⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
 Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
