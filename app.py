@@ -81,7 +81,6 @@ st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
 napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
 
-# Brow lift uvjeti
 lam_da_ne, alergije = "N/A", "N/A"
 if any("Brow lift" in u for u in odabrane_usluge):
     st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
@@ -102,7 +101,9 @@ if st.button("POTVRDI REZERVACIJU"):
         novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
         posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Vrijeme: {vrijeme}")
-        st.success("Rezervacija zaprimljena!"); st.rerun()
+        st.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
+        time.sleep(5)
+        st.rerun()
 
 # --- UPRAVLJANJE I OCJENE ---
 st.markdown("---")
@@ -113,12 +114,10 @@ if ime_otkaz:
     moji = df[df['Ime'].str.contains(ime_otkaz, case=False, na=False)]
     for idx, row in moji.iterrows():
         with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
-            # Izmjena
             n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
             n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
             if st.button("Spremi izmjene", key=f"save{idx}"):
                 df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"; df.at[idx, 'Vrijeme'] = n_vr; df.to_csv("termini.csv", index=False); st.rerun()
-            # Ocjena
             ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate{idx}")
             if st.button("Pošalji ocjenu", key=f"send{idx}"):
                 spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, "Komentar")
