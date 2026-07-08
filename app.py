@@ -20,7 +20,7 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    try: requests.post(webhook_url, json=data)
+    try: requests.post(webhook_url, json=data, timeout=5)
     except: pass
 
 def ucitaj_termine():
@@ -109,9 +109,8 @@ if st.button("POTVRDI REZERVACIJU"):
             "Napomena": napomena, "Laminacija": lam_da_ne, "Alergije": alergije
         }])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-        # DISCORD POZIV
         posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
-        st.success("Hvala na rezervaciji! Termin je zaprimljen.")
+        st.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
         time.sleep(5); st.rerun()
     else:
         st.warning("Molimo ispunite sva obavezna polja i prihvatite pravila.")
@@ -126,10 +125,30 @@ if ime_otkaz:
     for idx, row in moji.iterrows():
         with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
             if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
-                # DISCORD POZIV
                 posalji_na_discord("❌ Otkazan termin!", row['Ime'], row['Usluga'], row['Kontakt'], f"Datum: {row['Datum']} u {row['Vrijeme']}")
                 df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
+            
+            # Postavke za editiranje
             n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
             n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
             if st.button("Spremi izmjene", key=f"save{idx}"):
-                df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"; df.at[idx,
+                df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"
+                df.at[idx, 'Vrijeme'] = n_vr
+                df.to_csv("termini.csv", index=False); st.rerun()
+            
+            ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate{idx}")
+            komentar = st.text_input("Komentar:", key=f"comm{idx}")
+            if st.button("Pošalji ocjenu", key=f"send{idx}"):
+                spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, komentar)
+                st.success("Hvala na Vašoj ocjeni i komentaru!")
+                time.sleep(1); st.rerun()
+
+# --- RECENZIJE KLIJENATA ---
+st.markdown("---")
+st.subheader("🌟 Recenzije naših klijenata")
+df_ocjene = ucitaj_ocjene()
+if not df_ocjene.empty:
+    for _, row in df_ocjene.iterrows():
+        st.markdown(f"""<div class='review-box'><strong>{row['Ime']}</strong> - ⭐ {row['Ocjena']}/5<br><em>Usluga: {row['Usluga']}</em><br>{row['Komentar']}</div>""", unsafe_allow_html=True)
+else:
+    st.info("Još nema javnih recenzija.")
