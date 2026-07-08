@@ -105,3 +105,38 @@ if ime_otkaz:
             if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_{idx}"):
                 df.drop(idx).to_csv("termini.csv", index=False); st.success("Termin otkazan!"); st.rerun()
     else: st.warning("Nije pronađen termin.")
+# --- ADMIN PANEL ---
+with st.sidebar:
+    st.header("🔐 Admin Panel")
+    if 'admin_auth' not in st.session_state: 
+        st.session_state.admin_auth = False
+    
+    if not st.session_state.admin_auth:
+        pwd = st.text_input("Lozinka:", type="password")
+        if st.button("Prijava"):
+            if pwd == "171102": 
+                st.session_state.admin_auth = True
+                st.rerun()
+            else: 
+                st.error("Pogrešna lozinka!")
+    else:
+        if st.button("Odjava"): 
+            st.session_state.admin_auth = False
+            st.rerun()
+            
+        st.subheader("Upravljanje terminima")
+        df = ucitaj_termine()
+        
+        # Prikaz termina s opcijom brisanja
+        for idx, row in df.iterrows():
+            with st.expander(f"{row['Ime']} - {row['Datum']}"):
+                st.write(f"Usluga: {row['Usluga']}")
+                st.write(f"Kontakt: {row['Kontakt']}")
+                if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
+                    df.drop(idx).to_csv("termini.csv", index=False)
+                    st.success("Termin obrisan!")
+                    st.rerun()
+        
+        st.markdown("---")
+        if st.download_button("Preuzmi CSV", df.to_csv(index=False), "termini.csv"):
+            st.success("Preuzimanje započeto!")
