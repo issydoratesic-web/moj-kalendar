@@ -93,23 +93,27 @@ if kat:
                 time.sleep(1); st.rerun()
             else: st.error("Molimo ispunite sve podatke.")
 
-# --- OTKAZIVANJE TERMINA ---
+# --- OTKAZIVANJE TERMINA (S FIZIČKIM PRETRAŽIVANJEM) ---
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
-ime_otkaz_input = st.text_input("Upišite puno ime i prezime za otkaz:")
+ime_otkaz_input = st.text_input("Upišite puno ime i prezime za otkaz (npr. Josipa Mrka):")
 
 if ime_otkaz_input:
     df = ucitaj_termine()
-    moji_termini = df[df['Ime'].str.lower() == ime_otkaz_input.strip().lower()]
+    # Koristimo 'contains' s 'case=False' za maksimalnu fleksibilnost pretrage
+    search_term = ime_otkaz_input.strip()
+    moji_termini = df[df['Ime'].str.contains(search_term, case=False, na=False)]
     
     if not moji_termini.empty:
+        st.write(f"Pronađeni termini za: **{search_term}**")
         for idx, row in moji_termini.iterrows():
-            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
+            # Dodan 'key' parametar kako bi streamlit razlikovao gumbe
+            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})", key=f"btn_{idx}"):
                 obrisi_termin_po_indexu(idx)
                 st.success(f"Termin za {row['Usluga']} je otkazan.")
                 st.rerun()
     else:
-        st.warning("Nije pronađen nijedan termin za to ime.")
+        st.warning(f"Nije pronađen nijedan termin za ime: '{search_term}'. Molimo provjerite točnost upisa.")
 
 # --- ADMIN PANEL ---
 with st.sidebar:
