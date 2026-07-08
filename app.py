@@ -33,7 +33,6 @@ usluge_mapa = {
     ],
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
-}
 
 # --- FUNKCIJE ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, datum, vrijeme):
