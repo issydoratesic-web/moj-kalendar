@@ -140,10 +140,16 @@ if ime_otkaz:
     df = ucitaj_termine()
     moji = df[df['Ime'].str.contains(ime_otkaz, case=False, na=False)]
     for idx, row in moji.iterrows():
-        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
-            if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
-                posalji_na_discord("❌ Otkazan termin!", row['Ime'], row['Usluga'], row['Kontakt'], f"Datum: {row['Datum']} u {row['Vrijeme']}")
-                df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
+        # --- Ostatak koda od linije 143 ---
+            with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
+                # Ovdje dodaj gumb za otkazivanje
+                if st.button(f"Otkazi {row['Vrijeme']}", key=f"del_{idx}"):
+                    # Funkcija koja briše red iz CSV-a
+                    df_update = ucitaj_termine()
+                    df_update = df_update.drop(idx)
+                    df_update.to_csv("termini.csv", index=False)
+                    st.success("Termin otkazan!")
+                    st.rerun()
             
             # Postavke za editiranje
             n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
