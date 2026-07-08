@@ -21,7 +21,7 @@ with st.sidebar:
     if not st.session_state.admin_auth:
         pwd = st.text_input("Lozinka:", type="password")
         if st.button("Prijava"):
-            if pwd == "Admin123": st.session_state.admin_auth = True; st.rerun()
+            if pwd == "171102": st.session_state.admin_auth = True; st.rerun()
             else: st.error("Pogrešna lozinka!")
     else:
         if st.button("Odjava"): st.session_state.admin_auth = False; st.rerun()
@@ -34,7 +34,7 @@ with st.sidebar:
                     df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
 
 # --- GLAVNI UI ---
-st.title("✨ Adora Beauty Concept")
+st.title("Adora Beauty Concept")
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
 prezime = col_p.text_input("Prezime:")
