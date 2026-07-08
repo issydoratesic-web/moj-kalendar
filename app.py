@@ -33,7 +33,7 @@ st.markdown("""
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         return pd.read_csv("termini.csv", dtype=str)
-    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Novi_klijent", "Napomena", "Laminacija_DA_NE", "Alergije"])
+    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Novi_klijent", "Napomena (alergije na proizvod, osjetljiva koža)", "Laminacija_DA_NE", "Alergije"])
 
 # --- ADMIN PANEL ---
 with st.sidebar:
