@@ -20,10 +20,7 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    try:
-        requests.post(webhook_url, json=data)
-    except:
-        pass
+    requests.post(webhook_url, json=data)
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
@@ -51,7 +48,7 @@ with st.sidebar:
             if pwd == "171102": st.session_state.admin_auth = True; st.rerun()
             else: st.error("Pogrešna lozinka!")
     else:
-        if st.button("Odjava"): st.session_state.admin_auth = False; st.rerun()
+        if st.button("Odjava", key="logout_btn"): st.session_state.admin_auth = False; st.rerun()
         st.subheader("Upravljanje terminima")
         df = ucitaj_termine()
         for idx, row in df.iterrows():
@@ -62,65 +59,85 @@ with st.sidebar:
 
 # --- GLAVNI UI ---
 st.title("Rezervacije termina u Adora Beauty Concept-u")
-st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina min 24h prije.<br>• Akontacija 50% za šminkanje (IBAN: HR03 2402 0061 1406 1395 3).</div>""", unsafe_allow_html=True)
+st.markdown("""<div class='custom-box'><strong>Napomena:</strong><br>• Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.<br>• Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.</div>""", unsafe_allow_html=True)
 
 col_i, col_p = st.columns(2)
 ime = col_i.text_input("Ime:")
 prezime = col_p.text_input("Prezime:")
-kontakt = st.text_input("Broj mobitela ili Instagram:")
+kontakt = st.text_input("Broj mobitela ili instagram korisničko ime:")
 
-usluge_lista = ["Šminkanje - 40€", "Terensko šminkanje - 50€", "Brow lift - 30€", "Brow lift i bojanje - 35€", "Duga kosa - Elegantni repovi - 25€", "Kratka kosa - Hollywood valovi - 25€"]
-odabrane_usluge = st.multiselect("Odaberite usluge:", usluge_lista)
+usluge_lista = ["Šminkanje - 40€", "Terensko šminkanje - 50€", "Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€", "Brow lift i bojanje - 35€", "Enzimski piling - 25€", "Blagi mehanički piling - 20€", "Parenje toplim ručnikom i masaža uz piling - 35€", "Kratka kosa - Ravnanje - 10€", "Kratka kosa - Uvijanje - 20€", "Kratka kosa - Hollywood valovi - 25€", "Kratka kosa - Elegantni repovi - 15€", "Punđa - 15€", "Duga kosa - Ravnanje - 20€", "Duga kosa - Uvijanje - 30€", "Duga kosa - Hollywood valovi - 35€", "Duga kosa - Elegantni repovi - 25€", "Little Luxe Spa - Mini - 50€", "Little Luxe Spa - Classic - 70€", "Little Luxe Spa - VIP - 100€"]
+odabrane_usluge = st.multiselect("Odaberite jednu ili više usluga:", usluge_lista)
 
+broj_osoba = {}
 ukupna_cijena = 0
 for usluga in odabrane_usluge:
-    cijena = int(usluga.split(" - ")[-1].replace("€", ""))
-    ukupna_cijena += cijena
-st.markdown(f"### 💰 Ukupno: {ukupna_cijena}€")
+    cijena_po_osobi = int(usluga.split(" - ")[-1].replace("€", ""))
+    broj = st.number_input(f"Broj osoba za: {usluga}", min_value=1, value=1) if "Little Luxe" not in usluga else 1
+    broj_osoba[usluga] = broj
+    ukupna_cijena += cijena_po_osobi * broj
+st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 
-novi_klijent = st.radio("Novi klijent?", ["Da", "Ne"], index=None)
-napomena = st.text_area("Napomena:")
+novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
+napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
+
+lam_da_ne, alergije = "N/A", "N/A"
+if any("Brow lift" in u for u in odabrane_usluge):
+    st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
+    lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju?", ["Da", "Ne"], index=None)
+    alergije = st.text_input("Imate li poznate alergije?")
 
 c1, c2, c3 = st.columns(3)
 dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
 mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
-godina = c3.selectbox("Godina:", ["2026", "2027"])
+godina = c3.selectbox("Godina:", ["2026", "2027", "2028"])
 vrijeme = st.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 21)])
 
-potvrda = st.checkbox("Potvrđujem pravila.")
+potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila otkazivanja i uvjete akontacije.")
 
 if st.button("POTVRDI REZERVACIJU"):
-    if potvrda and ime and prezime:
-        df = ucitaj_termine()
-        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena}])
-        pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-        st.success("Rezervacija zaprimljena!")
-        time.sleep(2); st.rerun()
+    if potvrda and ime and prezime and kontakt:
+        df_save = ucitaj_termine()
+        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+        pd.concat([df_save, novi], ignore_index=True).to_csv("termini.csv", index=False)
+        posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Vrijeme: {vrijeme}")
+        st.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
+        time.sleep(3)
+        st.rerun()
 
-# --- UPRAVLJANJE TERMINOM ---
+# --- UPRAVLJANJE MOJIM TERMINOM ---
 st.markdown("---")
-st.subheader("👤 Upravljanje mojim terminom")
-trazi = st.text_input("Upišite ime za pronalazak termina:")
+st.subheader("👤 Upravljanje mojim terminom i ocjenjivanje")
+ime_otkaz = st.text_input("Upišite ime za pronalazak termina:")
 
-if trazi:
-    df = ucitaj_termine()
-    # Pretraživanje po dijelu imena, neovisno o velikim/malim slovima
-    moji = df[df['Ime'].str.contains(trazi, case=False, na=False)]
+if ime_otkaz:
+    df_load = ucitaj_termine()
+    moji = df_load[df_load['Ime'].str.lower() == ime_otkaz.lower().strip()]
     
     if not moji.empty:
         for idx, row in moji.iterrows():
-            with st.expander(f"Termin: {row['Ime']} - {row['Datum']} u {row['Vrijeme']}"):
-                if st.button("Otkazi ovaj termin", key=f"del_user_{idx}"):
-                    df.drop(idx).to_csv("termini.csv", index=False)
+            with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
+                if st.button(f"Otkazi ovaj termin", key=f"del_{idx}"):
+                    df_new = ucitaj_termine().drop(idx)
+                    df_new.to_csv("termini.csv", index=False)
                     st.success("Termin otkazan!"); st.rerun()
                 
-                # Izmjena
-                n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d_{idx}")
-                n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v_{idx}")
+                st.write("### 📅 Izmjeni datum i vrijeme:")
+                n_dan = st.selectbox("Novi dan:", [f"{i:02d}" for i in range(1, 32)], key=f"d_{idx}")
+                n_mj = st.selectbox("Novi mjesec:", [f"{i:02d}" for i in range(1, 13)], key=f"m_{idx}")
+                n_vr = st.selectbox("Novo vrijeme:", [f"{h:02d}:00" for h in range(8, 21)], key=f"v_{idx}")
+                
                 if st.button("Spremi izmjene", key=f"save_{idx}"):
-                    df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/2026"
-                    df.at[idx, 'Vrijeme'] = n_vr
-                    df.to_csv("termini.csv", index=False)
+                    df_update = ucitaj_termine()
+                    df_update.at[idx, 'Datum'] = f"{n_dan}/{n_mj}/2026"
+                    df_update.at[idx, 'Vrijeme'] = n_vr
+                    df_update.to_csv("termini.csv", index=False)
                     st.success("Ažurirano!"); st.rerun()
+                
+                st.write("### ⭐ Ocijenite nas:")
+                ocj = st.slider("Ocjena:", 1, 5, 5, key=f"rate_{idx}")
+                if st.button("Pošalji ocjenu", key=f"send_{idx}"):
+                    spremi_ocjenu(row['Ime'], row['Usluga'], ocj, "Komentar")
+                    st.success("Hvala!")
     else:
-        st.warning("Nije pronađen termin pod tim imenom.")
+        st.warning("Nije pronađen termin.")
