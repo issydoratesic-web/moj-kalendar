@@ -9,13 +9,17 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 # --- CSS STILOVI ---
 st.markdown("""
     <style>
-    /* Boja pozadine cijele stranice */
+    /* Globalno postavljanje crne boje za sav tekst */
+    html, body, [class*="st-"] {
+        color: black !important;
+    }
+    
     .stApp { background-color: #fdfbfb; }
     
-    /* Glavni naslov */
-    h1 { color: #d63384; text-align: center; }
+    /* Naslovi */
+    h1, h2, h3 { color: black !important; text-align: center; }
     
-    /* Roza pozadina za sve izbornike i polja za unos, s crnim tekstom */
+    /* Roza pozadina za polja za unos, s crnim tekstom */
     div[data-baseweb="select"] > div, 
     input, 
     textarea {
@@ -25,7 +29,7 @@ st.markdown("""
         color: black !important;
     }
     
-    /* Osigurava da tekst unutar izbornika bude crn */
+    /* Tekst unutar izbornika */
     div[data-baseweb="select"] div {
         color: black !important;
     }
@@ -36,21 +40,18 @@ st.markdown("""
         padding: 20px; 
         border-radius: 15px; 
         border-left: 10px solid #d63384; 
-        color: #000000;
+        color: black !important;
         margin-bottom: 20px;
     }
     
     /* Stil gumba */
     div.stButton > button {
         background-color: #d63384;
-        color: white;
+        color: white !important; /* Gumb ostaje bijeli tekst radi kontrasta */
         border-radius: 10px;
         width: 100%;
         border: none;
         padding: 10px;
-    }
-    div.stButton > button:hover {
-        background-color: #b02a6c;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -127,3 +128,4 @@ if kat:
         napomena = st.text_area("Napomena:")
         
         c1, c2, c3 = st.columns(3)
+        dan = c1.selectbox("Dan:", [f"{
