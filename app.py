@@ -120,8 +120,13 @@ if ime_otkaz:
             n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
             if st.button("Spremi izmjene", key=f"save{idx}"):
                 df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"; df.at[idx, 'Vrijeme'] = n_vr; df.to_csv("termini.csv", index=False); st.rerun()
+           # ... unutar petlje za expander ...
             ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate{idx}")
             komentar = st.text_input("Komentar:", key=f"comm{idx}")
+            
             if st.button("Pošalji ocjenu", key=f"send{idx}"):
                 spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, komentar)
                 st.success("Hvala na Vašoj ocjeni i komentaru!")
+                # Dodajemo kratku pauzu i rerun kako bi se recenzija odmah pojavila na dnu
+                time.sleep(1)
+                st.rerun()
