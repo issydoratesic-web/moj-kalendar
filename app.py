@@ -65,7 +65,7 @@ with st.sidebar:
             df = ucitaj_termine()
             if not df.empty:
                 for idx, row in df.iterrows():
-                    with st.expander(f"{row['Ime']} - {row['Datum']}"):
+                    with st.expander(f"{row['Ime']} - {row['Datum']} ({row['Vrijeme']})"):
                         st.write(f"**Usluga:** {row['Usluga']}")
                         st.write(f"**Kontakt:** {row['Kontakt']}")
                         st.write(f"**Napomena:** {row['Napomena']}")
@@ -134,10 +134,11 @@ if any("Brow lift" in u for u in odabrane_usluge):
     lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju?", ["Da", "Ne"], index=None)
     alergije = st.text_input("Imate li poznate alergije?")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
 mjesec = c2.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
 godina = c3.selectbox("Godina:", [str(i) for i in range(2026, 2031)])
+vrijeme = c4.selectbox("Vrijeme:", [f"{i:02d}:00" for i in range(8, 21)])
 
 potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila otkazivanja i uvjete akontacije.")
 
@@ -146,7 +147,7 @@ if st.button("POTVRDI REZERVACIJU"):
         lista_detalja = [u if "Little Luxe" in u else f"{u} ({broj_osoba[u]} osoba)" for u in odabrane_usluge]
         detalji_usluga = ", ".join(lista_detalja)
         df = ucitaj_termine()
-        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": f"{detalji_usluga} (Ukupno: {ukupna_cijena}€)", "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": f"{detalji_usluga} (Ukupno: {ukupna_cijena}€)", "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
         posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", f"{detalji_usluga} | Cijena: {ukupna_cijena}€", kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}")
         st.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa."); time.sleep(3); st.rerun()
@@ -162,21 +163,23 @@ if ime_otkaz:
     moji = df[df['Ime_clean'] == ime_otkaz.lower().strip()]
     if not moji.empty:
         for idx, row in moji.iterrows():
-            with st.expander(f"Termin: {row['Usluga']} ({row['Datum']})"):
+            with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} - {row['Vrijeme']})"):
                 if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
                     df.drop(idx).to_csv("termini.csv", index=False); st.success("Otkazano!"); st.rerun()
                 
                 # Izmjena termina
-                if st.button("Izmjeni datum", key=f"edit_btn_{idx}"): st.session_state[f"edit_mode_{idx}"] = True
+                if st.button("Izmjeni datum/vrijeme", key=f"edit_btn_{idx}"): st.session_state[f"edit_mode_{idx}"] = True
                 if st.session_state.get(f"edit_mode_{idx}", False):
                     n_dan = st.selectbox("Novi dan:", [f"{i:02d}" for i in range(1, 32)], key=f"d_{idx}")
                     n_mjesec = st.selectbox("Novi mjesec:", [f"{i:02d}" for i in range(1, 13)], key=f"m_{idx}")
                     n_godina = st.selectbox("Nova godina:", [str(i) for i in range(2026, 2031)], key=f"g_{idx}")
-                    if st.button("Spremi novi datum", key=f"save_{idx}"):
+                    n_vrijeme = st.selectbox("Novo vrijeme:", [f"{i:02d}:00" for i in range(8, 21)], key=f"v_{idx}")
+                    if st.button("Spremi novi termin", key=f"save_{idx}"):
                         df_final = ucitaj_termine()
                         df_final.at[idx, 'Datum'] = f"{n_dan}/{n_mjesec}/{n_godina}"
+                        df_final.at[idx, 'Vrijeme'] = n_vrijeme
                         df_final.to_csv("termini.csv", index=False)
-                        st.success("Datum izmijenjen!"); st.session_state[f"edit_mode_{idx}"] = False; st.rerun()
+                        st.success("Termin izmijenjen!"); st.session_state[f"edit_mode_{idx}"] = False; st.rerun()
 
                 st.write("### ⭐ Ocijenite nas:")
                 ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate_{idx}")
