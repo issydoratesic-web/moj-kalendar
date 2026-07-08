@@ -105,20 +105,39 @@ if st.button("POTVRDI REZERVACIJU"):
         time.sleep(5)
         st.rerun()
 
-# --- UPRAVLJANJE I OCJENE ---
+# --- UPRAVLJANJE MOJIM TERMINOM ---
 st.markdown("---")
 st.subheader("👤 Upravljanje mojim terminom i ocjenjivanje")
-ime_otkaz = st.text_input("Upišite ime za pronalazak:")
+ime_otkaz = st.text_input("Upišite ime za pronalazak termina:")
+
 if ime_otkaz:
     df = ucitaj_termine()
-    moji = df[df['Ime'].str.contains(ime_otkaz, case=False, na=False)]
-    for idx, row in moji.iterrows():
-        with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
-            n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
-            n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
-            if st.button("Spremi izmjene", key=f"save{idx}"):
-                df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"; df.at[idx, 'Vrijeme'] = n_vr; df.to_csv("termini.csv", index=False); st.rerun()
-            ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate{idx}")
-            if st.button("Pošalji ocjenu", key=f"send{idx}"):
-                spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, "Komentar")
-                st.success("Hvala na ocjeni!")
+    moji = df[df['Ime'].str.lower() == ime_otkaz.lower().strip()]
+    
+    if not moji.empty:
+        for idx, row in moji.iterrows():
+            with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
+                if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
+                    df = df.drop(idx)
+                    df.to_csv("termini.csv", index=False)
+                    st.success("Termin otkazan!"); st.rerun()
+                
+                st.write("---")
+                st.write("### 📅 Izmjeni datum i vrijeme:")
+                n_dan = st.selectbox("Novi dan:", [f"{i:02d}" for i in range(1, 32)], key=f"d_{idx}")
+                n_mj = st.selectbox("Novi mjesec:", [f"{i:02d}" for i in range(1, 13)], key=f"m_{idx}")
+                n_vr = st.selectbox("Novo vrijeme:", [f"{h:02d}:00" for h in range(8, 21)], key=f"v_{idx}")
+                
+                if st.button("Spremi izmjene", key=f"save_edit_{idx}"):
+                    df.at[idx, 'Datum'] = f"{n_dan}/{n_mj}/2026"
+                    df.at[idx, 'Vrijeme'] = n_vr
+                    df.to_csv("termini.csv", index=False)
+                    st.success("Termin ažuriran!"); st.rerun()
+                
+                st.write("---")
+                ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate_{idx}")
+                if st.button("Pošalji ocjenu", key=f"send_rate_{idx}"):
+                    spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, "Komentar")
+                    st.success("Hvala na ocjeni!")
+    else:
+        st.warning("Nije pronađen termin.")
