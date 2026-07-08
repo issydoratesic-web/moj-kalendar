@@ -120,6 +120,8 @@ if ime_otkaz:
     for idx, row in moji.iterrows():
         with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
             if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
+                # Poziv funkcije za obavijest na Discord prije brisanja
+                posalji_na_discord("❌ Otkazan termin!", row['Ime'], row['Usluga'], row['Kontakt'], f"Datum: {row['Datum']} u {row['Vrijeme']}")
                 df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
             n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
             n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
