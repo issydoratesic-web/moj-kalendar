@@ -125,13 +125,7 @@ if st.button("POTVRDI REZERVACIJU"):
             "Napomena": napomena, "Laminacija": lam_da_ne, "Alergije": alergije
         }])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-        posalji_na_discord(
-    "🔔 Nova rezervacija!", 
-    f"{ime} {prezime}", 
-    ", ".join(odabrane_usluge), 
-    kontakt, 
-    f"Datum: {datum_odabir} u {vrijeme}"
-): {dan}/{mjesec}/{godina}")
+        posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {datum_odabir} u {vrijeme}") {dan}/{mjesec}/{godina}")
         st.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
         time.sleep(5); st.rerun()
     else:
