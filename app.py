@@ -28,12 +28,15 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, datum, vrijeme):
         pass
 
 def ucitaj_termine():
+    ocekivani_stupci = ["Ime", "Prezime", "Kontakt", "Datum", "Usluga"]
     if os.path.exists("termini.csv"):
-        try:
-            return pd.read_csv("termini.csv", dtype=str)
-        except Exception:
-            return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
-    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
+        df = pd.read_csv("termini.csv")
+        # Provjera nedostaju li stupci
+        for col in ocekivani_stupci:
+            if col not in df.columns:
+                df[col] = "" # Dodaj prazan stupac ako nedostaje
+        return df
+    return pd.DataFrame(columns=ocekivani_stupci)
 
 def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga):
     df = ucitaj_termine()
