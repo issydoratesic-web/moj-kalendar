@@ -105,4 +105,55 @@ if kat:
             if potvrda:
                 if ime and prezime and kontakt and novi_klijent:
                     df = ucitaj_termine()
-                    novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA
+                    novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
+                    pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
+                    
+                    posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
+                    
+                    placeholder = st.empty()
+                    placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
+                    time.sleep(10)
+                    placeholder.empty()
+                    st.rerun()
+                else: st.error("Molimo ispunite obavezna polja.")
+            else:
+                st.warning("Molimo vas da potvrdite da ste pročitali pravila otkazivanja kako biste mogli nastaviti.")
+
+st.markdown("---")
+st.subheader("👤 Upravljanje mojim terminom")
+ime_otkaz = st.text_input("Upišite ime za pronalazak termina:")
+
+if ime_otkaz:
+    df = ucitaj_termine()
+    df['Ime_clean'] = df['Ime'].astype(str).str.lower().str.strip()
+    trazeno_ime = ime_otkaz.lower().strip()
+    moji = df[df['Ime_clean'] == trazeno_ime]
+    
+    if not moji.empty:
+        for idx, row in moji.iterrows():
+            with st.expander(f"Termin: {row['Usluga']} ({row['Datum']})"):
+                if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
+                    df_final = ucitaj_termine()
+                    df_final.drop(idx).to_csv("termini.csv", index=False)
+                    st.success("Vaš termin je uspješno otkazan!")
+                    time.sleep(2)
+                    st.rerun()
+                
+                if st.button("Izmjeni datum/vrijeme", key=f"edit_{idx}"):
+                    st.session_state[f"edit_mode_{idx}"] = True
+                
+                if st.session_state.get(f"edit_mode_{idx}", False):
+                    n_dan = st.selectbox("Novi dan:", [f"{i:02d}" for i in range(1, 32)], key=f"d_{idx}")
+                    n_mjesec = st.selectbox("Novi mjesec:", [f"{i:02d}" for i in range(1, 13)], key=f"m_{idx}")
+                    n_godina = st.selectbox("Nova godina:", [str(i) for i in range(2026, 2031)], key=f"g_{idx}")
+                    
+                    if st.button("Spremi novi termin", key=f"save_{idx}"):
+                        df_final = ucitaj_termine()
+                        df_final.at[idx, 'Datum'] = f"{n_dan}/{n_mjesec}/{n_godina}"
+                        df_final.to_csv("termini.csv", index=False)
+                        st.success("Termin uspješno izmijenjen!")
+                        st.session_state[f"edit_mode_{idx}"] = False
+                        time.sleep(2)
+                        st.rerun()
+    else: 
+        st.warning(f"Nije pronađen termin pod imenom: {ime_otkaz}.")
