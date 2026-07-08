@@ -84,14 +84,19 @@ broj_osoba = {}
 ukupna_cijena = 0
 
 if odabrane_usluge:
-    st.write("Navedite broj osoba za svaku odabranu uslugu:")
+    st.write("Navedite broj osoba (za pakete nije potrebno):")
     for usluga in odabrane_usluge:
-        broj = st.number_input(f"Broj osoba za: {usluga}", min_value=1, value=1, key=f"num_{usluga}")
-        broj_osoba[usluga] = broj
-        try:
-            cijena_po_osobi = int(usluga.split(" - ")[-1].replace("€", ""))
+        cijena_po_osobi = int(usluga.split(" - ")[-1].replace("€", ""))
+        
+        # Broj osoba samo ako NIJE Little Luxe
+        if "Little Luxe" not in usluga:
+            broj = st.number_input(f"Broj osoba za: {usluga}", min_value=1, value=1, key=f"num_{usluga}")
+            broj_osoba[usluga] = broj
             ukupna_cijena += cijena_po_osobi * broj
-        except: pass
+        else:
+            broj_osoba[usluga] = 1 # Fiksno 1 za pakete
+            ukupna_cijena += cijena_po_osobi
+            
     st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 
 st.subheader("Dodatna pitanja")
@@ -114,7 +119,15 @@ potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila otkazivanja i uvj
 if st.button("POTVRDI REZERVACIJU"):
     if potvrda:
         if ime and prezime and kontakt and novi_klijent and odabrane_usluge:
-            detalji_usluga = ", ".join([f"{u} ({broj_osoba[u]} osoba)" for u in odabrane_usluge])
+            # Formatiranje prikaza ovisno o tome je li paket ili ne
+            lista_detalja = []
+            for u in odabrane_usluge:
+                if "Little Luxe" in u:
+                    lista_detalja.append(u)
+                else:
+                    lista_detalja.append(f"{u} ({broj_osoba[u]} osoba)")
+            
+            detalji_usluga = ", ".join(lista_detalja)
             
             df = ucitaj_termine()
             novi = pd.DataFrame([{
