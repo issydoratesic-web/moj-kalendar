@@ -16,14 +16,24 @@ st.markdown("""
     .stApp { background-color: #fdfbfb; }
     h1, h2, h3 { color: black !important; text-align: center; }
     
-    /* Roza pozadina za polja za unos, s crnim tekstom */
+    /* Roza pozadina za polja za unos i izbornike */
     div[data-baseweb="select"] > div, input, textarea {
         background-color: #fff0f5 !important;
         border: 1px solid #ffb6c1 !important;
         border-radius: 10px !important;
         color: black !important;
     }
-    div[data-baseweb="select"] div { color: black !important; }
+    
+    /* Roza pozadina za padajući izbornik (menu) */
+    div[data-baseweb="menu"] {
+        background-color: #fff0f5 !important;
+        color: black !important;
+    }
+    
+    /* Boja slova u izborniku kada se lebdi iznad opcije */
+    div[role="option"]:hover {
+        background-color: #ffc0cb !important;
+    }
 
     /* Prilagođeni box */
     .custom-box { 
@@ -49,7 +59,7 @@ st.markdown("""
 
 # --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
-    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4" 
+    webhook_url = "TVOJ_DISCORD_WEBHOOK_URL_OVDJE" 
     embed = {
         "title": naslov, "color": 16753920,
         "fields": [
