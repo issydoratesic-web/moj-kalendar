@@ -100,7 +100,7 @@ Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 
 uz opis plaćanja: akontacija za termin (vaš datum).
 """)
 
-# Unos
+# --- Unos (AŽURIRANO) ---
 col_i, col_p = st.columns(2)
 with col_i: ime = st.text_input("Ime:")
 with col_p: prezime = st.text_input("Prezime:")
@@ -109,12 +109,22 @@ kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None
 
 if kat:
     usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
-    if usluga:
-        # Nove komponente
+    
+   if usluga:
         st.subheader("Dodatna pitanja")
-        status_klijenta = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-        napomena = st.text_area("Napomena za termin (alergije, stil šminke...):")
+        novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
+        napomena = st.text_area("Napomena (stil, inspiracija...):")
         
+        # OVDJE JE PROMJENA - provjeravamo cijeli string usluge
+        lam_da_ne, alergije = "N/A", "N/A"
+        
+        # Ako u nazivu usluge postoji "Brow lift"
+        if "Brow lift" in usluga:
+            st.markdown("---")
+            st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
+            lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju ili lifting trepavica?", ["Da", "Ne"], index=None)
+            alergije = st.text_input("Imate li poznate alergije na kozmetičke proizvode?")
+
         # Datum i vrijeme
         col1, col2, col3 = st.columns(3)
         with col1: dan = st.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
@@ -129,10 +139,12 @@ if kat:
 
         if st.button("POTVRDI REZERVACIJU"):
             if ime and prezime and kontakt and status_klijenta:
-                spremi_termin(f"{ime} {prezime}", kontakt, dat_str, vrijeme, usluga, status_klijenta, napomena)
+                # OVDJE pozovi funkciju za spremanje s novim parametrima:
+                spremi_termin(f"{ime} {prezime}", kontakt, dat_str, vrijeme, usluga, status_klijenta, napomena, lam_da_ne, alergije)
                 st.success("Rezervacija potvrđena!")
                 time.sleep(1); st.rerun()
-            else: st.error("Molimo ispunite ime, prezime, kontakt i status klijenta.")
+            else: 
+                st.error("Molimo ispunite ime, prezime, kontakt i status klijenta.")
 # Otkazivanje
 st.markdown("---")
 st.subheader("👤 Otkazivanje termina")
