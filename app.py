@@ -34,14 +34,18 @@ usluge_mapa = {
     "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
 }
 
-# --- FUNKCIJE ---
+
 def posalji_na_discord(naslov, ime, usluga, kontakt, datum, vrijeme):
-    webhook_url = st.secrets.get("DISCORD_WEBHOOK")
-    if not webhook_url: return
-    
-    embed = {
-        "title": f"🔔 {naslov}",
-        "color": 3066993, 
+    # --- UI ---
+st.markdown("<h1 style='text-align: center;'>Adora Beauty Concept</h1>", unsafe_allow_html=True)
+
+st.info("""
+**Uvjeti poslovanja**
+
+*   **Otkazivanje termina:** Molimo da otkazivanje najavite najmanje 24h unaprijed. U slučaju otkazivanja unutar 24h ili nedolaska, naplaćuje se 100% iznosa usluge.
+*   **Akontacija:** Za sve termine usluge šminkanja potrebno je uplatiti akontaciju u iznosu od 50% cijene na IBAN: **HR03 2402 0061 1406 1395 3**.
+    *   *Opis plaćanja:* Akontacija za termin - [Datum]
+""")
         "fields": [
             {"name": "👤 Klijent", "value": ime, "inline": False},
             {"name": "✂️ Usluga", "value": usluga, "inline": False},
