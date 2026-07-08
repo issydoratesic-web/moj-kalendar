@@ -45,12 +45,6 @@ st.markdown("""<style>.custom-box { background-color: #fff0f5; padding: 15px; bo
 
 # --- ADMIN PANEL ---
 with st.sidebar:
-    st.subheader("Upravljanje recenzijama")
-        if st.button("OBRIŠI SVE RECENZIJE"):
-            if os.path.exists("ocjene.csv"):
-                os.remove("ocjene.csv")
-                st.success("Sve recenzije su obrisane!")
-                st.rerun()
     st.header("🔐 Admin Panel")
     if 'admin_auth' not in st.session_state: st.session_state.admin_auth = False
     if not st.session_state.admin_auth:
