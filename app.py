@@ -116,7 +116,9 @@ if ime_otkaz:
 # --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
-    if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
+    # Ovo mora točno ovako izgledati u tvom kodu:
+if st.text_input("Lozinka:", type="password") == st.secrets["ADMIN_PASSWORD"]:
+    # Ovdje se nalazi ostatak admin panela
         df = ucitaj_termine()
         st.subheader("Upravljanje terminima")
         
