@@ -20,22 +20,13 @@ def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
         ]
     }
     data = {"embeds": [embed]}
-    requests.post(webhook_url, json=data)
+    try: requests.post(webhook_url, json=data)
+    except: pass
 
-# --- OSTALE FUNKCIJE ---
 def ucitaj_termine():
     if os.path.exists("termini.csv"):
         return pd.read_csv("termini.csv", dtype=str)
-    # Ažuriraj ovaj dio unutar "POTVRDI REZERVACIJU"
-        novi = pd.DataFrame([{
-            "Ime": f"{ime} {prezime}", 
-            "Kontakt": kontakt, 
-            "Datum": f"{dan}/{mjesec}/{godina}", 
-            "Vrijeme": vrijeme, 
-            "Usluga": ", ".join(odabrane_usluge),
-            "Laminacija": lam_da_ne,       # Novo polje
-            "Alergije": alergije           # Novo polje
-        }])
+    return pd.DataFrame(columns=["Ime", "Kontakt", "Datum", "Vrijeme", "Usluga", "Novi_klijent", "Napomena", "Laminacija", "Alergije"])
 
 def spremi_ocjenu(ime, usluga, ocjena, komentar):
     df_ocjene = pd.DataFrame([{"Ime": ime, "Usluga": usluga, "Ocjena": ocjena, "Komentar": komentar}])
@@ -68,9 +59,7 @@ with st.sidebar:
         for idx, row in df.iterrows():
             with st.expander(f"{row['Ime']} - {row['Datum']} ({row['Vrijeme']})"):
                 st.write(f"Usluga: {row['Usluga']}")
-                if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_{idx}"):
-                    # Obavijest adminu
-                    posalji_na_discord("Termin obrisao Admin", str(row['Ime']), str(row['Usluga']), str(row['Kontakt']), f"Termin: {row['Datum']} u {row['Vrijeme']}")
+                if st.button(f"OBRIŠI TERMIN {idx}", key=f"del_admin_{idx}"):
                     df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
 
 # --- GLAVNI UI ---
@@ -93,20 +82,15 @@ for usluga in odabrane_usluge:
     except: continue
 st.markdown(f"### 💰 Ukupno za platiti: {ukupna_cijena}€")
 
-novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-napomena = st.text_area("Napomena (alergije, osjetljiva koža):")
-# --- DODATNA PITANJA ZA LAMINACIJU ---
-lam_da_ne = "N/A"
-alergije = "N/A"
-
-# Provjeravamo sadrži li odabrana usluga pojam "laminacija" ili "Brow lift"
+# --- PITANJA ---
+lam_da_ne, alergije = "N/A", "N/A"
 if any("Brow lift" in u or "laminacija" in u.lower() for u in odabrane_usluge):
     st.markdown("### ⚠️ Dodatna pitanja")
-    lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju ili lifting trepavica?", ["Da", "Ne"], index=None)
-    alergije = st.text_input("Imate li poznate alergije na kozmetičke proizvode?")
+    lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju ili lifting trepavica?", ["Da", "Ne"], index=None, key="lam_q")
+    alergije = st.text_input("Imate li poznate alergije na kozmetičke proizvode?", key="alg_q")
 
-novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-napomena = st.text_area("Napomena (osjetljiva koža i sl.):")
+novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None, key="novi_q")
+napomena = st.text_area("Napomena (osjetljiva koža i sl.):", key="nap_q")
 
 c1, c2, c3 = st.columns(3)
 dan = c1.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
@@ -119,7 +103,7 @@ potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila.")
 if st.button("POTVRDI REZERVACIJU"):
     if potvrda and ime and prezime and kontakt:
         df = ucitaj_termine()
-        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": "N/A", "Alergije": "N/A"}])
+        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija": lam_da_ne, "Alergije": alergije}])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
         posalji_na_discord("Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
         st.success("Hvala na rezervaciji!"); st.rerun()
@@ -134,24 +118,20 @@ if ime_otkaz:
     for idx, row in moji.iterrows():
         with st.expander(f"Termin: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})"):
             if st.button(f"Otkazi ovaj termin", key=f"del_user_{idx}"):
-                # Poziv funkcije za obavijest na Discord prije brisanja
                 posalji_na_discord("❌ Otkazan termin!", row['Ime'], row['Usluga'], row['Kontakt'], f"Datum: {row['Datum']} u {row['Vrijeme']}")
                 df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
             n_dan = st.selectbox("Novi dan", [f"{i:02d}" for i in range(1, 32)], key=f"d{idx}")
             n_vr = st.selectbox("Novo vrijeme", [f"{h:02d}:00" for h in range(8, 21)], key=f"v{idx}")
             if st.button("Spremi izmjene", key=f"save{idx}"):
                 df.at[idx, 'Datum'] = f"{n_dan}/{mjesec}/{godina}"; df.at[idx, 'Vrijeme'] = n_vr; df.to_csv("termini.csv", index=False); st.rerun()
-           # ... unutar petlje za expander ...
             ocjena = st.slider("Ocjena:", 1, 5, 5, key=f"rate{idx}")
             komentar = st.text_input("Komentar:", key=f"comm{idx}")
-            
             if st.button("Pošalji ocjenu", key=f"send{idx}"):
                 spremi_ocjenu(row['Ime'], row['Usluga'], ocjena, komentar)
                 st.success("Hvala na Vašoj ocjeni i komentaru!")
-                # Dodajemo kratku pauzu i rerun kako bi se recenzija odmah pojavila na dnu
-                time.sleep(1)
-                st.rerun()
-                # --- RECENZIJE KLIJENATA ---
+                time.sleep(1); st.rerun()
+
+# --- RECENZIJE KLIJENATA ---
 st.markdown("---")
 st.subheader("🌟 Recenzije naših klijenata")
 df_ocjene = ucitaj_ocjene()
