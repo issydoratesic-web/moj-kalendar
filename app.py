@@ -1,84 +1,144 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 import os
-import requests
 import time
+import requests
 
-st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
+st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
 
 # --- FUNKCIJE ---
+def posalji_na_discord(naslov, ime, usluga, kontakt, datum, vrijeme):
+    webhook_url = st.secrets.get("DISCORD_WEBHOOK")
+    if not webhook_url: return
+    
+    embed = {
+        "title": f"🔔 {naslov}",
+        "color": 3066993, 
+        "fields": [
+            {"name": "👤 Klijent", "value": ime, "inline": False},
+            {"name": "✂️ Usluga", "value": usluga, "inline": False},
+            {"name": "📱 Kontakt", "value": kontakt, "inline": False},
+            {"name": "📅 Datum", "value": datum, "inline": True},
+            {"name": "⏰ Vrijeme", "value": vrijeme, "inline": True}
+        ]
+    }
+    try:
+        requests.post(webhook_url, json={"embeds": [embed]})
+    except:
+        pass
+
 def ucitaj_termine():
+    ocekivani_stupci = ["Ime", "Prezime", "Kontakt", "Datum", "Usluga"]
     if os.path.exists("termini.csv"):
         df = pd.read_csv("termini.csv")
-        # Osiguraj da stupci postoje
-        for col in ["Ime", "Prezime", "Datum", "Usluga"]:
-            if col not in df.columns: df[col] = ""
+        # Provjera nedostaju li stupci
+        for col in ocekivani_stupci:
+            if col not in df.columns:
+                df[col] = "" # Dodaj prazan stupac ako nedostaje
         return df
-    return pd.DataFrame(columns=["Ime", "Prezime", "Kontakt", "Datum", "Usluga"])
+    return pd.DataFrame(columns=ocekivani_stupci)
 
-def posalji_discord(ime, prezime, datum, usluga, tip="rezervacija"):
-    try:
-        webhook = st.secrets["DISCORD_WEBHOOK"]
-        data = {"embeds": [{"title": "🔔 Rezervacija" if tip == "rezervacija" else "❌ Otkazivanje", 
-                           "fields": [{"name": "Klijent", "value": f"{ime} {prezime}"}, {"name": "Usluga", "value": usluga}, {"name": "Datum", "value": datum}]}]}
-        requests.post(webhook, json=data)
-    except: pass
+def spremi_termin(ime_puno, kontakt, dat_str, vrijeme, usluga):
+    df = ucitaj_termine()
+    novi = pd.DataFrame([{"Ime": ime_puno, "Kontakt": kontakt, "Datum": dat_str, "Vrijeme": vrijeme, "Usluga": usluga}])
+    df = pd.concat([df, novi], ignore_index=True)
+    df.to_csv("termini.csv", index=False)
+    posalji_na_discord("Nova rezervacija!", ime_puno, usluga, kontakt, dat_str, vrijeme)
+
+def obrisi_termin(index):
+    df = ucitaj_termine()
+    if index in df.index:
+        termin = df.loc[index]
+        posalji_na_discord("Termin otkazan!", termin['Ime'], termin['Usluga'], termin['Kontakt'], termin['Datum'], termin['Vrijeme'])
+        df = df.drop(index)
+        df.to_csv("termini.csv", index=False)
+        return True
+    return False
 
 # --- UI ---
 st.title("✨ Adora Beauty Concept")
-st.info("⚠️ **Napomena:** Otkazivanje min. 24h prije. Akontacija 50% za šminkanje na IBAN: HR03 2402 0061 1406 1395 3.")
 
-# REZERVACIJA
-st.subheader("Nova rezervacija")
-c1, c2 = st.columns(2)
-ime = c1.text_input("Ime:")
-prezime = c2.text_input("Prezime:")
+st.info("""
+⚠️ **Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. 
+Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
+""")
+
+usluge_mapa = {
+    "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
+    "Oblikovanje i korekcija obrva": ["Oblikovanje obrva pincetom - 8€", "Oblikovanje i bojanje obrva - 15€", "Brow lift - 30€"],
+    "Tretmani lica": ["Enzimski piling - 25€", "Masaža i piling - 35€"],
+    "Frizure": ["Kratka kosa - 20€", "Duga kosa - 30€", "Punđa - 15€"],
+    "Little Luxe Spa": ["Mini - 50€", "Classic - 70€", "VIP - 100€"]
+}
+
+# Unos
+col_i, col_p = st.columns(2)
+with col_i: ime = st.text_input("Ime:")
+with col_p: prezime = st.text_input("Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
+kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
-# (Ovdje bi išli tvoji izbornici za usluge - skraćeno radi preglednosti)
-usluga = st.text_input("Usluga:") 
-d, m, g = st.columns(3)
-dan = d.selectbox("Dan:", range(1, 32))
-mjesec = m.selectbox("Mjesec:", range(1, 13))
-godina = g.selectbox("Godina:", [2026, 2027])
-datum_str = f"{dan:02d}/{mjesec:02d}/{godina}"
+if kat:
+    usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
+    if usluga:
+        col1, col2, col3 = st.columns(3)
+        with col1: dan = st.selectbox("Dan:", [f"{i:02d}" for i in range(1, 32)])
+        with col2: mjesec = st.selectbox("Mjesec:", [f"{i:02d}" for i in range(1, 13)])
+        with col3: godina = st.selectbox("Godina:", [str(g) for g in range(2026, 2030)])
+        dat_str = f"{dan}/{mjesec}/{godina}"
+        
+        df_svi = ucitaj_termine()
+        zauzeti = df_svi[df_svi['Datum'] == dat_str]['Vrijeme'].tolist()
+        slobodni = [f"{h:02d}:00" for h in range(8, 21) if f"{h:02d}:00" not in zauzeti]
+        vrijeme = st.selectbox("Vrijeme:", slobodni)
 
-if st.button("POTVRDI REZERVACIJU"):
-    if ime and prezime:
-        df = ucitaj_termine()
-        df = pd.concat([df, pd.DataFrame([{"Ime": ime, "Prezime": prezime, "Kontakt": kontakt, "Datum": datum_str, "Usluga": usluga}])], ignore_index=True)
-        df.to_csv("termini.csv", index=False)
-        posalji_discord(ime, prezime, datum_str, usluga)
-        st.success("VAŠ TERMIN JE USPJEŠNO REZERVIRAN!")
-        time.sleep(2); st.rerun()
+        if st.button("POTVRDI REZERVACIJU"):
+            if ime and prezime and kontakt:
+                spremi_termin(f"{ime} {prezime}", kontakt, dat_str, vrijeme, usluga)
+                st.success("Rezervacija potvrđena!")
+                time.sleep(1); st.rerun()
+            else: st.error("Molimo ispunite sve podatke.")
 
-# OTKAZIVANJE
+# Otkazivanje
 st.markdown("---")
-st.subheader("🔎 Otkazivanje rezervacije")
-ime_otkaz = st.text_input("Ime za otkaz:")
-prezime_otkaz = st.text_input("Prezime za otkaz:")
+st.subheader("👤 Otkazivanje termina")
+ime_otkaz = st.text_input("Upišite puno ime i prezime za otkazivanje:")
 
-if ime_otkaz and prezime_otkaz:
+if ime_otkaz:
     df = ucitaj_termine()
-    # Pretraga bez obzira na velika/mala slova
-    maska = (df['Ime'].str.lower() == ime_otkaz.lower()) & (df['Prezime'].str.lower() == prezime_otkaz.lower())
-    moji = df[maska]
-    
-    if moji.empty:
-        st.warning("Nije pronađen termin za to ime.")
-    else:
+    moji = df[df['Ime'].str.lower() == ime_otkaz.strip().lower()]
+    if not moji.empty:
         for idx, row in moji.iterrows():
-            st.write(f"Termin: {row['Usluga']} | {row['Datum']}")
-            if st.button(f"❌ Otkazi termin {idx}", key=idx):
-                df = df.drop(idx)
-                df.to_csv("termini.csv", index=False)
-                st.success("Termin otkazan.")
+            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']} u {row['Vrijeme']})", key=f"btn_{idx}"):
+                obrisi_termin(idx)
+                st.success("Termin uspješno otkazan.")
                 st.rerun()
+    else:
+        st.warning("Nije pronađen termin za to ime.")
 
-# ADMIN
+# --- ADMIN PANEL ---
 with st.sidebar:
     st.header("🔐 Admin")
-    if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
+    admin_pw = st.text_input("Lozinka:", type="password")
+    
+    # Koristimo siguran pristup tajnama
+    if admin_pw == st.secrets.get("ADMIN_PASSWORD"):
+        st.write("✅ Prijavljeni ste")
         df = ucitaj_termine()
-        st.dataframe(df)
+        st.subheader("Upravljanje terminima")
+        
+        if not df.empty:
+            opcije = df.apply(lambda x: f"{x['Ime']} {x['Prezime']} | {x['Datum']}", axis=1).tolist()
+            odabrani_termin = st.selectbox("Odaberi termin za brisanje:", opcije)
+            
+            if st.button("OBRIŠI ODABRANI"):
+                idx = opcije.index(odabrani_termin)
+                df = df.drop(df.index[idx])
+                df.to_csv("termini.csv", index=False)
+                st.success("Termin obrisan!")
+                st.rerun()
+        else:
+            st.info("Nema rezervacija u bazi.")
+    else:
+        if admin_pw:
+            st.error("Netočna lozinka.")
