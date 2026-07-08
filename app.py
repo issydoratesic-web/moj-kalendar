@@ -8,7 +8,7 @@ st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
 # --- FUNKCIJA ZA DISCORD ---
 def posalji_na_discord(naslov, ime, usluga, kontakt, detalji):
-    webhook_url = "https://discord.com/api/webhooks/1524364417167261887/vacZD177MFgx-JaegBXKT2hM9ZtsDNj_D1eZoNACpjL9NB225Ewk5_zlxpLshBdPSzS4" # OVDJE UBIČI SVOJ URL
+    webhook_url = "TVOJ_DISCORD_WEBHOOK_URL_OVDJE" # OVDJE UBIČI SVOJ URL
     embed = {
         "title": naslov,
         "color": 16753920,
@@ -108,26 +108,4 @@ if kat:
                 novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": "08:00", "Usluga": usluga, "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
                 pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
                 
-                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam: {lam_da_ne}, Aler: {alergije}")
-                
-                placeholder = st.empty()
-                placeholder.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
-                time.sleep(10)
-                placeholder.empty()
-                st.rerun()
-            else: st.error("Molimo ispunite obavezna polja.")
-
-st.markdown("---")
-st.subheader("👤 Otkazivanje termina")
-ime_otkaz = st.text_input("Upišite ime za otkazivanje:")
-if ime_otkaz:
-    df = ucitaj_termine()
-    moji = df[df['Ime'].str.lower() == ime_otkaz.strip().lower()]
-    if not moji.empty:
-        for idx, row in moji.iterrows():
-            if st.button(f"Otkazi: {row['Usluga']} ({row['Datum']})", key=f"del_user_{idx}"):
-                # Ovdje dodan poziv za notifikaciju otkazivanja
-                posalji_na_discord("❌ Termin otkazan od strane klijenta", row['Ime'], row['Usluga'], row['Kontakt'], "Klijent je sam otkazao termin.")
-                df.drop(idx).to_csv("termini.csv", index=False)
-                st.success("Termin otkazan!"); st.rerun()
-    else: st.warning("Nije pronađen termin.")
+                posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", usluga, kontakt, f"Novi: {novi_klijent}, Napomena: {napomena}, Lam
