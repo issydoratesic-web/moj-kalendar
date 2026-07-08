@@ -47,7 +47,7 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga, novi, napomena, lam, ale
 with st.sidebar:
     st.header("🔐 Admin Panel")
     password = st.text_input("Lozinka:", type="password")
-    if password == "Admin123":
+    if password == "171102":
         st.subheader("Pregled svih termina")
         df_admin = ucitaj_termine()
         st.dataframe(df_admin)
