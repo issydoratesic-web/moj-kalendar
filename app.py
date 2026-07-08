@@ -1,68 +1,58 @@
+import streamlit as st
+import pandas as pd
+import os
+import time
 
-def posalji_discord_obavijest(ime, kontakt, datum, vrijeme):
-try:
-        # Kod sada koristi novi Webhook koji si poslao
-DISCORD_WEBHOOK = st.secrets["DISCORD_WEBHOOK"]
-except Exception as e:
-st.error("Nedostaje DISCORD_WEBHOOK u Streamlit Secrets!")
-return
+st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
 
-    # Elegantno formatirana Discord kartica (Embed)
-data = {
-"content": "🔔 **Stigla je nova rezervacija termina!**",
-"embeds": [{
-"title": f"👤 Klijent: {ime}",
-            "color": 15418782, # Elegantna rozna/crvena boja za tvoj salon
-            "color": 15418782, 
-"fields": [
-{"name": "📱 Kontakt (Instagram/Mobitel)", "value": kontakt, "inline": False},
-{"name": "📅 Datum", "value": str(datum), "inline": True},
-@@ -29,7 +29,7 @@ def posalji_discord_obavijest(ime, kontakt, datum, vrijeme):
-try:
-requests.post(DISCORD_WEBHOOK, json=data)
-except Exception as e:
-        st.error(f"Greska kod slanja na Discord: {e}")
-        st.error(f"Greška kod slanja na Discord: {e}")
+# Definiranje usluga s cijenama
+usluge_mapa = {
+    "Šminkanje": {"Šminkanje (40€)": "40€", "Terensko šminkanje (50€)": "50€"},
+    "Obrve": {"Oblikovanje pincetom (8€)": "8€", "Oblikovanje i bojanje (15€)": "15€", "Brow lift (30€)": "30€"},
+    "Tretmani lica": {"Enzimski piling (25€)": "25€", "Masaža i piling (35€)": "35€"},
+    "Frizure": {"Kratka kosa (10€)": "10€", "Duga kosa (15€)": "15€", "Punđa (15€)": "15€"},
+    "Little Luxe Spa": {"Mini (50€)": "50€", "Classic (70€)": "70€", "VIP (100€)": "100€"}
+}
 
-# --- BAZA PODATAKA ---
-DB_FILE = "termini.csv"
-@@ -51,14 +51,15 @@ def spremi_termin(ime, kontakt, datum, vrijeme):
+def ucitaj_termine():
+    if os.path.exists("termini.csv"):
+        return pd.read_csv("termini.csv")
+    return pd.DataFrame(columns=["Ime", "Prezime", "Kontakt", "Datum", "Vrijeme", "Usluga"])
 
-if stranica == "Rezerviraj Termin":
-st.title("📅 Rezervirajte svoj termin")
-    st.write("Odaberite datum i vrijeme koji vam odgovaraju, a ja cu vam se javiti za potvrdu.")
-    st.write("Odaberite datum i vrijeme koji vam odgovaraju.")
-df_termini = ucitaj_termine()
+# UI
+st.title("✨ Adora Beauty Concept")
 
-with st.form("rezervacija_forma", clear_on_submit=True):
-ime = st.text_input("Vase Ime i Prezime:")
-kontakt = st.text_input("Vas Instagram username ili broj mobitela:")
-datum = st.date_input("Odaberite datum:", min_value=datetime.today().date())
+c1, c2 = st.columns(2)
+ime = c1.text_input("Ime:")
+prezime = c2.text_input("Prezime:")
+kontakt = st.text_input("Kontakt (IG/Br):")
 
-        # Ovdje je tvoj novi raspored do 20:00
-vremena = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
-zauzeta_vremena = df_termini[df_termini["Datum"] == str(datum)]["Vrijeme"].values
-slobodna_vremena = [v for v in vremena if v not in zauzeta_vremena]
-@@ -67,19 +68,19 @@ def spremi_termin(ime, kontakt, datum, vrijeme):
-vrijeme = st.selectbox("Odaberite vrijeme:", slobodna_vremena)
-poslano = st.form_submit_button("Rezerviraj")
-else:
-            st.warning("Svi termini za ovaj dan su zauzeti. Odaberite drugi datum.")
-            st.warning("Svi termini za ovaj dan su zauzeti.")
-poslano = False
+kat = st.selectbox("Kategorija:", list(usluge_mapa.keys()))
+usluga = st.selectbox("Usluga:", list(usluge_mapa[kat].keys()))
 
-if poslano:
-if ime and kontakt:
-spremi_termin(ime, kontakt, datum, vrijeme)
-posalji_discord_obavijest(ime, kontakt, datum, vrijeme)
-                st.success(f"Uspjesno poslano! Rezervirali ste {datum} u {vrijeme}. Javit cu vam se uskoro!")
-                st.success(f"Uspjesno poslano! Rezervirali ste {datum} u {vrijeme}.")
-else:
-st.error("Molimo ispunite sva polja.")
+d, m, g, v = st.columns(4)
+dan = d.selectbox("Dan:", range(1, 32))
+mjesec = m.selectbox("Mjesec:", range(1, 13))
+godina = g.selectbox("Godina:", [2026, 2027])
+vrijeme = v.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 20)])
 
-elif stranica == "Admin Panel":
-st.title("📥 Pristigli Termini")
-df_termini = ucitaj_termine()
-if not df_termini.empty:
-        st.dataframe(df_termini, use_container_width=True)
-        st.dataframe(df_termini, use_container_width=True)
+if st.button("POTVRDI REZERVACIJU"):
+    df = ucitaj_termine()
+    novi = pd.DataFrame([{"Ime": ime, "Prezime": prezime, "Kontakt": kontakt, 
+                          "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": usluga}])
+    df = pd.concat([df, novi], ignore_index=True)
+    df.to_csv("termini.csv", index=False)
+    st.success("Termin potvrđen!")
+    time.sleep(1); st.rerun()
+
+# ADMIN
+with st.sidebar:
+    st.header("🔐 Admin")
+    if st.text_input("Lozinka:", type="password") == st.secrets.get("ADMIN_PASSWORD"):
+        df = ucitaj_termine()
+        st.dataframe(df)
+        if not df.empty:
+            idx = st.selectbox("Odaberi red za brisanje:", df.index)
+            if st.button("OBRIŠI"):
+                df.drop(idx).to_csv("termini.csv", index=False)
+                st.rerun()
