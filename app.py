@@ -103,10 +103,26 @@ potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila.")
 if st.button("POTVRDI REZERVACIJU"):
     if potvrda and ime and prezime and kontakt:
         df = ucitaj_termine()
-        novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija": lam_da_ne, "Alergije": alergije}])
+        novi = pd.DataFrame([{
+            "Ime": f"{ime} {prezime}", 
+            "Kontakt": kontakt, 
+            "Datum": f"{dan}/{mjesec}/{godina}", 
+            "Vrijeme": vrijeme, 
+            "Usluga": ", ".join(odabrane_usluge), 
+            "Novi_klijent": novi_klijent, 
+            "Napomena": napomena, 
+            "Laminacija": lam_da_ne, 
+            "Alergije": alergije
+        }])
         pd.concat([df, novi], ignore_index=True).to_csv("termini.csv", index=False)
-        posalji_na_discord("Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
-        st.success("Hvala na rezervaciji!"); st.rerun()
+        posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
+        
+        # Prikaz potvrde koji traje 5 sekundi
+        st.success("Hvala na rezervaciji! Termin je zaprimljen. Potvrdu termina primit ćete u najkraćem roku putem Instagrama ili WhatsAppa.")
+        time.sleep(5)
+        st.rerun()
+    else:
+        st.warning("Molimo ispunite sva obavezna polja i prihvatite pravila.")
 
 # --- UPRAVLJANJE MOJIM TERMINOM I OCJENJIVANJE ---
 st.markdown("---")
