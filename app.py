@@ -3,8 +3,15 @@ import pandas as pd
 import os
 import time
 
-# Konfiguracija stranice
 st.set_page_config(page_title="Adora Beauty Concept", layout="centered")
+
+# --- CSS STILOVI ---
+st.markdown("""
+    <style>
+    .elegant-title { font-family: 'Georgia', serif; text-align: center; color: #d63384; }
+    .custom-box { background-color: #fff0f5; padding: 15px; border-radius: 10px; border-left: 5px solid #d63384; color: #4a4a4a; }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
@@ -13,7 +20,7 @@ def ucitaj_termine():
         return pd.read_csv("termini.csv", dtype=str)
     return pd.DataFrame(columns=kolone)
 
-# --- ADMIN PANEL U SIDEBARU ---
+# --- ADMIN PANEL (SIDEBAR) ---
 with st.sidebar:
     st.header("🔐 Admin Panel")
     if 'admin_auth' not in st.session_state: st.session_state.admin_auth = False
@@ -34,13 +41,17 @@ with st.sidebar:
                     df.drop(idx).to_csv("termini.csv", index=False); st.rerun()
 
 # --- GLAVNI UI ---
-st.title("Adora Beauty Concept")
-col_i, col_p = st.columns(2)
-ime = col_i.text_input("Ime:")
-prezime = col_p.text_input("Prezime:")
-kontakt = st.text_input("Kontakt (IG/Br):")
-kat = st.selectbox("Odaberite kategoriju:", ["Šminkanje", "Oblikovanje i korekcija obrva", "Tretmani lica", "Frizure", "Little Luxe Spa"], index=None)
+st.markdown("<h1 class='elegant-title'>✨ Adora Beauty Concept</h1>", unsafe_allow_html=True)
 
+st.markdown("""
+<div class='custom-box'>
+    <strong>Napomena:</strong><br>
+    • Otkazivanje termina potrebno je najaviti najmanje 24h prije termina.<br>
+    • Prilikom zakazivanja termina za <strong>šminkanje</strong> potrebno je uplatiti akontaciju (50% cijene) na IBAN: HR03 2402 0061 1406 1395 3.
+</div>
+""", unsafe_allow_html=True)
+
+# ... (Ovdje nastavljaš ostatak koda za formu za rezervaciju)
 if kat:
     usluge_mapa = {
         "Šminkanje": ["Šminkanje - 40€", "Terensko šminkanje - 50€"],
