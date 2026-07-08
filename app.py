@@ -101,6 +101,8 @@ vrijeme = st.selectbox("Vrijeme:", [f"{h:02d}:00" for h in range(8, 21)])
 potvrda = st.checkbox("Potvrđujem da sam pročitao/la pravila.")
 
 if st.button("POTVRDI REZERVACIJU"):
+    # Ovo dodaj nakon što se spremi u CSV (unutar if st.button("POTVRDI REZERVACIJU"))
+        posalji_na_discord("🔔 Nova rezervacija!", f"{ime} {prezime}", ", ".join(odabrane_usluge), kontakt, f"Datum: {dan}/{mjesec}/{godina}")
     if potvrda and ime and prezime and kontakt:
         df = ucitaj_termine()
         novi = pd.DataFrame([{"Ime": f"{ime} {prezime}", "Kontakt": kontakt, "Datum": f"{dan}/{mjesec}/{godina}", "Vrijeme": vrijeme, "Usluga": ", ".join(odabrane_usluge), "Novi_klijent": novi_klijent, "Napomena": napomena, "Laminacija_DA_NE": lam_da_ne, "Alergije": alergije}])
