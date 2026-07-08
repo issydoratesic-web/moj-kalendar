@@ -107,21 +107,17 @@ with col_p: prezime = st.text_input("Prezime:")
 kontakt = st.text_input("Kontakt (IG/Br):")
 kat = st.selectbox("Odaberite kategoriju:", list(usluge_mapa.keys()), index=None)
 
-if kat:
-    usluga = st.selectbox("Usluga:", usluge_mapa[kat], index=None)
-    
-    if usluga:
+if usluga:
         st.subheader("Dodatna pitanja")
+        novi_klijent = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
+        napomena = st.text_area("Napomena (stil, inspiracija...):")
         
-        # Obavezna pitanja za svakoga
-        status_klijenta = st.radio("Jeste li novi klijent?", ["Da", "Ne"], index=None)
-        napomena = st.text_area("Napomena za termin (alergije, osjetljiva koža, željeni stil šminke, inspiracija...):")
+        # OVDJE JE PROMJENA - provjeravamo cijeli string usluge
+        lam_da_ne, alergije = "N/A", "N/A"
         
-        # Pitanja za laminaciju (pojavljuju se samo ako je odabran Brow lift)
-        lam_da_ne = "N/A"
-        alergije = "N/A"
-        
+        # Ako u nazivu usluge postoji "Brow lift"
         if "Brow lift" in usluga:
+            st.markdown("---")
             st.markdown("### ⚠️ Za laminaciju obrva i trepavica")
             lam_da_ne = st.radio("Jeste li u posljednjih 6 tjedana radili laminaciju ili lifting trepavica?", ["Da", "Ne"], index=None)
             alergije = st.text_input("Imate li poznate alergije na kozmetičke proizvode?")
