@@ -4,7 +4,7 @@ import os
 import time
 import requests
 
-st.set_page_config(page_title="Adora Beauty Concept", page_icon="✂️", layout="centered")
+st.set_page_config(page_title="Adora Beauty Concept", page_icon="✨", layout="centered")
 
 # --- KONFIGURACIJA USLUGA ---
 usluge_mapa = {
@@ -43,12 +43,24 @@ def spremi_termin(ime, kontakt, datum, vrijeme, usluga, novi, napomena, lam, ale
     pd.concat([df, novi_df], ignore_index=True).to_csv("termini.csv", index=False)
     posalji_na_discord("Nova rezervacija!", ime, usluga, kontakt, datum, vrijeme, f"Novi: {novi}, Lam: {lam}, Aler: {aler}")
 
+# --- BOČNA TRAKA (ADMIN) ---
+with st.sidebar:
+    st.header("🔐 Admin Panel")
+    password = st.text_input("Lozinka:", type="password")
+    if password == "Admin123":
+        st.subheader("Pregled svih termina")
+        df_admin = ucitaj_termine()
+        st.dataframe(df_admin)
+        if st.download_button("Preuzmi CSV", df_admin.to_csv(index=False), "termini.csv"):
+            st.success("Preuzeto!")
+    elif password:
+        st.error("Pogrešna lozinka!")
+
 # --- UI ---
-st.markdown("<h1 style='text-align: center;'>✨ Adora Beauty Concept</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #FFFFFF;'>✨ Adora Beauty Concept</h1>", unsafe_allow_html=True)
 
 st.info("""
-**Napomena:** - Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
-- Prilikom zakazivanja termina za **šminkanje** potrebno je uplatiti akontaciju u iznosu od 50% cijene usluge na IBAN: HR03 2402 0061 1406 1395 3.
+**Napomena:** Otkazivanje termina potrebno je najaviti najmanje 24h prije termina. Termini otkazani unutar 24h ili nedolazak bez obavijesti naplaćuju se u iznosu 100% cijene usluge.
 """)
 
 col_i, col_p = st.columns(2)
